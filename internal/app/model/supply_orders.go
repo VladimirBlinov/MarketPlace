@@ -30,3 +30,5 @@ type Supplier struct {
 	SupplierAccountNumber int
 	Avtive                bool
 }
+
+// TODO: Add payments

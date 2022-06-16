@@ -2,7 +2,7 @@ package model
 
 type Product struct {
 	ProductID    int
-	Name         string
+	ProductName  string
 	CategoryID   int
 	PiecesInPack int
 	MaterialID   int
@@ -17,8 +17,21 @@ type Product struct {
 type MarketPlaceItem struct {
 	MarketPlaceItemID int
 	ProductID         int
-	Name              string
+	ItemName          string
 	MarketPlaceID     int
 	Barcode           int
 	Avtive            bool
+}
+
+type Category struct {
+	CategoryID       int
+	CategoryName     string
+	ParentCategoryID int
+	Active           bool
+}
+
+type MarketPlace struct {
+	MarketPlaceID   int
+	MarketPlaceName string
+	Active          bool
 }

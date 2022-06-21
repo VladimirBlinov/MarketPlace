@@ -22,6 +22,7 @@ CREATE TABLE public.Product(
 	Width_MM decimal(28,3), 
 	Height_MM decimal(28,3),
 	Product_Description  varchar(4000),
+    User_ID bigint not null references public.users(id),
 	Avtive boolean not null
 );
 
@@ -37,6 +38,7 @@ CREATE TABLE public.MarketPlaceItem(
     Item_Name varchar(200),
     MarketPlace_ID bigint not null references public.MarketPlace(MarketPlace_ID),
     Barcode bigint not null,
+    User_ID bigint not null references public.users(id),
 	Avtive boolean not null
 );
 

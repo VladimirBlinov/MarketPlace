@@ -1,5 +1,7 @@
 package model
 
+import validation "github.com/go-ozzo/ozzo-validation"
+
 type Product struct {
 	ProductID    int
 	ProductName  string
@@ -11,7 +13,20 @@ type Product struct {
 	Width        float32
 	Height       float32
 	Description  string
+	UserID       int
 	Avtive       bool
+}
+
+func (p *Product) Validate() error {
+	return validation.ValidateStruct(
+		p,
+		validation.Field(&p.ProductName, validation.Required, validation.Length(1, 200)),
+		validation.Field(&p.CategoryID, validation.Required),
+		validation.Field(&p.PiecesInPack, validation.Required),
+		validation.Field(&p.MaterialID, validation.Required),
+		validation.Field(&p.UserID, validation.Required),
+		validation.Field(&p.Avtive, validation.Required),
+	)
 }
 
 type MarketPlaceItem struct {

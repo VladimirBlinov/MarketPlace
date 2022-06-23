@@ -26,5 +26,19 @@ func (r *UserRepo) Create(u *model.User) (*model.User, error) {
 }
 
 func (r *UserRepo) FindByEmail(email string) (*model.User, error) {
-	return nil, nil
+	u := &model.User{}
+	if err := r.store.db.QueryRow(
+		"SELECT id, email, encryptedpassword, userrole, active FROM public.users WHERE email = $1",
+		email,
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.EncryptedPassword,
+		&u.UserRole,
+		&u.Active,
+	); err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }

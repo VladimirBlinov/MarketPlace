@@ -6,7 +6,7 @@ CREATE TABLE public.Category(
 );
 
 CREATE TABLE public.Material(
-    Material_ID bigint not null primary key,
+    Material_ID bigserial not null primary key,
 	Material_Name varchar(200) not null,
 	Avtive boolean not null
 );

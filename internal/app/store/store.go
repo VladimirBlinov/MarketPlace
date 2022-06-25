@@ -9,10 +9,11 @@ import (
 
 // Store
 type Store struct {
-	config   *Config
-	db       *sql.DB
-	logger   *logrus.Logger
-	userRepo *UserRepo
+	config      *Config
+	db          *sql.DB
+	logger      *logrus.Logger
+	userRepo    *UserRepo
+	productRepo *ProductRepo
 }
 
 // New...
@@ -54,6 +55,17 @@ func (s *Store) User() *UserRepo {
 		store: s,
 	}
 	return s.userRepo
+}
+
+func (s *Store) Product() *ProductRepo {
+	if s.productRepo != nil {
+		return s.productRepo
+	}
+
+	s.productRepo = &ProductRepo{
+		store: s,
+	}
+	return s.productRepo
 }
 
 func (s *Store) ConfigureLogger() error {

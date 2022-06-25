@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
@@ -19,6 +20,33 @@ func Test_ProductValidate(t *testing.T) {
 				return model.TestProduct(t)
 			},
 			isValid: true,
+		},
+		{
+			name: "wrong category ID",
+			p: func() *model.Product {
+				p := model.TestProduct(t)
+				p.CategoryID = 1000
+				return p
+			},
+			isValid: false,
+		},
+		{
+			name: "short name",
+			p: func() *model.Product {
+				p := model.TestProduct(t)
+				p.ProductName = ""
+				return p
+			},
+			isValid: false,
+		},
+		{
+			name: "long name",
+			p: func() *model.Product {
+				p := model.TestProduct(t)
+				p.ProductName = strings.Repeat("a", 210)
+				return p
+			},
+			isValid: false,
 		},
 	}
 

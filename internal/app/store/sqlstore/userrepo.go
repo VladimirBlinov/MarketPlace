@@ -1,28 +1,33 @@
-package store
+package sqlstore
 
-import "github.com/VladimirBlinov/MarketPlace/internal/app/model"
+import (
+	"database/sql"
+
+	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
+)
 
 type UserRepo struct {
 	store *Store
 }
 
-func (r *UserRepo) Create(u *model.User) (*model.User, error) {
-	err := u.EncryptPasswordBeforeCreate()
-	if err != nil {
-		return nil, err
+func (r *UserRepo) Create(u *model.User) error {
+	if err := u.Validate(); err != nil {
+		return err
 	}
 
-	if err := r.store.db.QueryRow(
+	err := u.EncryptPasswordBeforeCreate()
+	if err != nil {
+		return err
+	}
+
+	return r.store.db.QueryRow(
 		"INSERT INTO public.users (email, encryptedpassword, userrole, active) VALUES ($1, $2, $3, $4) RETURNING id",
 		u.Email,
 		u.EncryptedPassword,
-		2,
+		u.UserRole,
 		u.Active,
-	).Scan(&u.ID); err != nil {
-		return nil, err
-	}
-
-	return u, nil
+	).Scan(&u.ID)
 }
 
 func (r *UserRepo) FindByEmail(email string) (*model.User, error) {
@@ -37,6 +42,9 @@ func (r *UserRepo) FindByEmail(email string) (*model.User, error) {
 		&u.UserRole,
 		&u.Active,
 	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
 		return nil, err
 	}
 

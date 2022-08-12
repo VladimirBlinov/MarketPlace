@@ -1,32 +1,28 @@
-package store_test
+package teststore_test
 
 import (
 	"testing"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
 	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
+	"github.com/VladimirBlinov/MarketPlace/internal/app/store/teststore"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUserRepo_Create(t *testing.T) {
-	s, teardown := store.TestStore(t, databaseURL)
-
-	defer teardown("users")
-
-	u, err := s.User().Create(model.TestUser(t))
-
-	assert.NoError(t, err)
+	s := teststore.New()
+	u := model.TestUser(t)
+	assert.NoError(t, s.User().Create(u))
 	assert.NotNil(t, u)
 }
 
 func TestFindByEmail(t *testing.T) {
-	s, teardown := store.TestStore(t, databaseURL)
-	defer teardown("users")
+	s := teststore.New()
 
 	email := "user@example.org"
 
 	_, err := s.User().FindByEmail(email)
-	assert.Error(t, err)
+	assert.EqualError(t, err, store.ErrRecordNotFound.Error())
 
 	u := model.TestUser(t)
 	u.Email = email
@@ -37,5 +33,4 @@ func TestFindByEmail(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, u)
-
 }

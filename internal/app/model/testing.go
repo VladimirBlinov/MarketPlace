@@ -6,6 +6,16 @@ func TestUser(t *testing.T) *User {
 	return &User{
 		Email:    "ex@test.org",
 		Password: "password",
+		UserRole: 2,
+		Active:   true,
+	}
+}
+
+func TestAdminUser(t *testing.T) *User {
+	return &User{
+		Email:    "ex@test.org",
+		Password: "password",
+		UserRole: 1,
 		Active:   true,
 	}
 }

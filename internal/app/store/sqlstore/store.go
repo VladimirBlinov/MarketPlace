@@ -32,7 +32,7 @@ func (s *Store) User() store.UserRepo {
 	return s.userRepo
 }
 
-func (s *Store) Product() *ProductRepo {
+func (s *Store) Product() store.ProductRepo {
 	if s.productRepo != nil {
 		return s.productRepo
 	}

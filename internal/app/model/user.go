@@ -8,12 +8,12 @@ import (
 
 // User
 type User struct {
-	ID                int
-	Email             string
-	Password          string
-	EncryptedPassword string
-	UserRole          int
-	Active            bool
+	ID                int    `json:"id"`
+	Email             string `json:"email"`
+	Password          string `json:"password,omitempty"`
+	EncryptedPassword string `json:"-"`
+	UserRole          int    `json:"userrole"`
+	Active            bool   `json:"active"`
 }
 
 func (u *User) Validate() error {
@@ -35,6 +35,10 @@ func (u *User) EncryptPasswordBeforeCreate() error {
 	}
 
 	return nil
+}
+
+func (u *User) Sanitize() {
+	u.Password = ""
 }
 
 func encryptString(s string) (string, error) {

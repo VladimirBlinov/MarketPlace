@@ -3,18 +3,18 @@ package model
 import validation "github.com/go-ozzo/ozzo-validation"
 
 type Product struct {
-	ProductID    int
-	ProductName  string
-	CategoryID   int
-	PiecesInPack int
-	MaterialID   int
-	Weight       float32
-	Lenght       float32
-	Width        float32
-	Height       float32
-	Description  string
-	UserID       int
-	Avtive       bool
+	ProductID    int     `json:"product_id"`
+	ProductName  string  `json:"product_name"`
+	CategoryID   int     `json:"category_id"`
+	PiecesInPack int     `json:"pieces_in_pack"`
+	MaterialID   int     `json:"material_id"`
+	Weight       float32 `json:"weight"`
+	Lenght       float32 `json:"lenght"`
+	Width        float32 `json:"width"`
+	Height       float32 `json:"height"`
+	Description  string  `json:"description"`
+	UserID       int     `json:"user_id"`
+	Avtive       bool    `json:"active"`
 }
 
 func (p *Product) Validate() error {

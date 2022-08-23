@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,13 +16,64 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServer_AuthenticateUser(t *testing.T) {
+func TestServer_HandleProductCreate(t *testing.T) {
 	store := teststore.New()
 	u := model.TestUser(t)
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
 	s := newServer(store, sessions.NewCookieStore(secretKey))
+	sc := securecookie.New(secretKey, nil)
+
+	testCases := []struct {
+		name         string
+		payload      interface{}
+		context      *model.User
+		coockieValue map[interface{}]interface{}
+		expectedCode int
+	}{
+		{
+			name: "valid",
+			payload: map[string]string{
+				"product_name":   "product",
+				"category_id":    "1111110000",
+				"pieces_in_pack": "1",
+				"material_id":    "1",
+				"weight":         "500",
+				"lenght":         "500",
+				"width":          "300",
+				"height":         "20",
+				"description":    "descript",
+			},
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusCreated,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			b := &bytes.Buffer{}
+			json.NewEncoder(b).Encode(tc.payload)
+			req, _ := http.NewRequest(http.MethodPost, "/private/product_create", b)
+			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			s.ServeHTTP(rec, req.WithContext(ctx))
+			assert.Equal(t, tc.expectedCode, rec.Code)
+		})
+	}
+}
+
+func TestServer_AuthenticateUser(t *testing.T) {
+	userStore := teststore.New()
+	u := model.TestUser(t)
+	userStore.User().Create(u)
+
+	secretKey := []byte("secret_key")
+	s := newServer(userStore, sessions.NewCookieStore(secretKey))
 	sc := securecookie.New(secretKey, nil)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -12,7 +12,7 @@ func (r *ProductRepo) Create(p *model.Product) error {
 		return nil
 	}
 
-	p.ProductID = len(r.products)
+	p.ProductID = len(r.products) + 1
 	r.products[p.ProductID] = p
 
 	return nil

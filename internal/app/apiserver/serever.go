@@ -63,6 +63,8 @@ func (s *server) ConfigureRouter() {
 	private := s.router.PathPrefix("/private").Subrouter()
 	private.Use(s.authenticateUser)
 	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
+	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
+
 }
 
 func (s *server) setRequestID(next http.Handler) http.Handler {
@@ -82,9 +84,13 @@ func (s *server) logRequest(next http.Handler) http.Handler {
 		logger.Infof("started %s %s", r.Method, r.RequestURI)
 
 		start := time.Now()
-		next.ServeHTTP(w, r)
+		rw := &responseWriter{w, http.StatusOK}
+		next.ServeHTTP(rw, r)
 
-		logger.Infof("completed in %v", time.Now().Sub(start))
+		logger.Infof("completed with %d %s in %v",
+			rw.code,
+			http.StatusText(rw.code),
+			time.Now().Sub(start))
 	})
 }
 
@@ -114,6 +120,49 @@ func (s *server) authenticateUser(next http.Handler) http.Handler {
 func (s *server) handleWhoami() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.respond(w, r, http.StatusOK, r.Context().Value(ctxKeyUser).(*model.User))
+	}
+}
+
+func (s *server) handleProductCreate() http.HandlerFunc {
+	type requestProduct struct {
+		ProductName  string  `json:"product_name"`
+		CategoryID   int     `json:"category_id,string"`
+		PiecesInPack int     `json:"pieces_in_pack,string"`
+		MaterialID   int     `json:"material_id,string"`
+		Weight       float32 `json:"weight,string"`
+		Lenght       float32 `json:"lenght,string"`
+		Width        float32 `json:"width,string"`
+		Height       float32 `json:"height,string"`
+		Description  string  `json:"description"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &requestProduct{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		p := &model.Product{
+			ProductName:  req.ProductName,
+			CategoryID:   req.CategoryID,
+			PiecesInPack: req.PiecesInPack,
+			MaterialID:   req.MaterialID,
+			Weight:       req.Weight,
+			Lenght:       req.Lenght,
+			Width:        req.Weight,
+			Height:       req.Height,
+			Description:  req.Description,
+			UserID:       r.Context().Value(ctxKeyUser).(*model.User).ID,
+			Avtive:       true,
+		}
+
+		if err := s.store.Product().Create(p); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusCreated, p)
 	}
 }
 

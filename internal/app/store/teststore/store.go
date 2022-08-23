@@ -35,7 +35,8 @@ func (s *Store) Product() store.ProductRepo {
 	}
 
 	s.productRepo = &ProductRepo{
-		store: s,
+		store:    s,
+		products: make(map[int]*model.Product),
 	}
 	return s.productRepo
 }

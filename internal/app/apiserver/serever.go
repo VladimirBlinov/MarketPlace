@@ -56,13 +56,17 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *server) ConfigureRouter() {
 	s.router.Use(s.setRequestID)
 	s.router.Use(s.logRequest)
-	s.router.Use(handlers.CORS(handlers.AllowedOrigins([]string{"*"})))
+	s.router.Use(handlers.CORS(
+		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
+		handlers.ExposedHeaders([]string{"Set-Cookie"}),
+		handlers.AllowCredentials()))
 	s.router.HandleFunc("/users", s.handleUsersCreate()).Methods("POST")
 	s.router.HandleFunc("/sessions", s.handleSessionsCreate()).Methods("POST")
 
 	private := s.router.PathPrefix("/private").Subrouter()
 	private.Use(s.authenticateUser)
 	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
+	private.HandleFunc("/signout", s.handleSignOut()).Methods("GET")
 	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
 
 }
@@ -123,6 +127,21 @@ func (s *server) handleWhoami() http.HandlerFunc {
 	}
 }
 
+func (s *server) handleSignOut() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, err := s.sessionStore.Get(r, SessionName)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		delete(session.Values, "user_id")
+		_ = session.Save(r, w)
+
+		s.respond(w, r.WithContext(context.Background()), http.StatusOK, nil)
+	}
+}
+
 func (s *server) handleProductCreate() http.HandlerFunc {
 	type requestProduct struct {
 		ProductName  string  `json:"product_name"`
@@ -170,7 +189,6 @@ func (s *server) handleUsersCreate() http.HandlerFunc {
 	type request struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
-		UserRole int    `json:"userrole"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {

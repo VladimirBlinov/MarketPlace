@@ -16,6 +16,44 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestServerHandleSignOut(t *testing.T) {
+	store := teststore.New()
+	u := model.TestUser(t)
+	store.User().Create(u)
+
+	secretKey := []byte("secret_key")
+	s := newServer(store, sessions.NewCookieStore(secretKey))
+	sc := securecookie.New(secretKey, nil)
+
+	testCases := []struct {
+		name         string
+		context      *model.User
+		coockieValue map[interface{}]interface{}
+		expectedCode int
+	}{
+		{
+			name:    "valid",
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodGet, "/private/signout", nil)
+			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			s.ServeHTTP(rec, req.WithContext(ctx))
+			assert.Equal(t, tc.expectedCode, rec.Code)
+			assert.NotEqual(t, tc.coockieValue, rec.Result().Header["Set-Cookie"])
+		})
+	}
+}
+
 func TestServer_HandleProductCreate(t *testing.T) {
 	store := teststore.New()
 	u := model.TestUser(t)

@@ -22,7 +22,7 @@ func (r *ProductRepo) Create(p *model.Product) error {
 }
 
 func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
-	productsList := make([]*model.Product, len(r.products))
+	productsList := make([]*model.Product, 0)
 	for _, product := range r.products {
 		if product.UserID == userId {
 			productsList = append(productsList, product)

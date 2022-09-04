@@ -2,13 +2,13 @@ CREATE TABLE public.Category(
     Category_ID bigint not null primary key,
 	Category_Name varchar(200) not null,
     Parent_Category_ID bigint,
-	Avtive boolean not null
+	Active boolean not null
 );
 
 CREATE TABLE public.Material(
     Material_ID bigserial not null primary key,
 	Material_Name varchar(200) not null,
-	Avtive boolean not null
+	Active boolean not null
 );
 
 CREATE TABLE public.Product(
@@ -23,13 +23,13 @@ CREATE TABLE public.Product(
 	Height_MM decimal(28,3),
 	Product_Description  varchar(4000),
     User_ID bigint not null references public.users(id),
-	Avtive boolean not null
+	Active boolean not null
 );
 
 CREATE TABLE public.MarketPlace(
     MarketPlace_ID bigserial not null primary key,
     MarketPlace_Name varchar(200),
-	Avtive boolean not null
+	Active boolean not null
 );
 
 CREATE TABLE public.MarketPlaceItem(
@@ -39,6 +39,6 @@ CREATE TABLE public.MarketPlaceItem(
     MarketPlace_ID bigint not null references public.MarketPlace(MarketPlace_ID),
     Barcode bigint not null,
     User_ID bigint not null references public.users(id),
-	Avtive boolean not null
+	Active boolean not null
 );
 

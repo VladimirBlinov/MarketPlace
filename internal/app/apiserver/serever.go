@@ -173,7 +173,7 @@ func (s *server) handleProductCreate() http.HandlerFunc {
 			Height:       req.Height,
 			Description:  req.Description,
 			UserID:       r.Context().Value(ctxKeyUser).(*model.User).ID,
-			Avtive:       true,
+			Active:       true,
 		}
 
 		if err := s.store.Product().Create(p); err != nil {

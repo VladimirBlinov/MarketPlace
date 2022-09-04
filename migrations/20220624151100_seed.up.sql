@@ -1,5 +1,5 @@
 INSERT INTO public.category(
-	category_id, category_name, parent_category_id, avtive)
+	category_id, category_name, parent_category_id, active)
 	VALUES 
     (1000000000, 'Дом и сад', null, true),
     (1100000000, 'Посуда', 1000000000, true),
@@ -9,7 +9,7 @@ INSERT INTO public.category(
     (1111110000, 'Деревянные менажницы', 1111100000, true);
 
 INSERT INTO public.material(
-	material_id, material_name, avtive)
+	material_id, material_name, active)
 	VALUES 
     (1, 'Дерево', true),
     (2, 'Пластик', true);

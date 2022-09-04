@@ -32,6 +32,6 @@ func TestProduct(t *testing.T) *Product {
 		Height:       15,
 		Description:  "описание",
 		UserID:       1,
-		Avtive:       true,
+		Active:       true,
 	}
 }

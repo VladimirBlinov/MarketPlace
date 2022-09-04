@@ -14,7 +14,7 @@ type Product struct {
 	Height       float32 `json:"height"`
 	Description  string  `json:"description"`
 	UserID       int     `json:"user_id"`
-	Avtive       bool    `json:"active"`
+	Active       bool    `json:"active"`
 }
 
 func (p *Product) Validate() error {
@@ -25,7 +25,7 @@ func (p *Product) Validate() error {
 		validation.Field(&p.PiecesInPack, validation.Required),
 		validation.Field(&p.MaterialID, validation.Required),
 		validation.Field(&p.UserID, validation.Required),
-		validation.Field(&p.Avtive, validation.Required),
+		validation.Field(&p.Active, validation.Required),
 	)
 }
 
@@ -35,7 +35,7 @@ type MarketPlaceItem struct {
 	ItemName          string
 	MarketPlaceID     int
 	Barcode           int
-	Avtive            bool
+	Active            bool
 }
 
 type Category struct {

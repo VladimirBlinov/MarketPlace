@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.Supplier(
     Supplier_SWIFT varchar(200),
     Supplier_Account_Number bigint,
     User_ID bigint not null references public.users(id),
-	Avtive boolean not null
+	Active boolean not null
 );
 
 CREATE TABLE IF NOT EXISTS public.SupplyOrderStatus(
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.SupplyOrder(
     ShippingCost_To_Logistic decimal(28,3) not null,
     ShippingCost_By_Logistic decimal(28,3) not null,
     User_ID bigint not null references public.users(id),
-    Avtive boolean not null
+    Active boolean not null
 );
 
 CREATE TABLE IF NOT EXISTS public.SupplyOrderProduct(
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public.SupplyOrderAudit(
     SupplyOrderAudit_Date timestamp not null,
     SupplyOrderStatus_ID bigint not null,
     Audit_user_id bigint not null references public.users(id),
-    Avtive boolean not null
+    Active boolean not null
 );
 
 CREATE TABLE IF NOT EXISTS public.PaymentStatus(
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.Payment(
     SupplyOrder_ID bigint not null references public.SupplyOrder(SupplyOrder_ID),
     PaymentStatus_ID bigint not null references public.PaymentStatus(PaymentStatus_ID),
     User_ID bigint not null references public.users(id),
-    Avtive boolean not null
+    Active boolean not null
 );
 
 
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS public.PaymentAudit(
     PaymentAudit_Date timestamp not null,
     PaymentStatus_ID bigint not null references public.PaymentStatus(PaymentStatus_ID),
     Audit_user_id bigint not null references public.users(id),
-    Avtive boolean not null
+    Active boolean not null
 );
 
 CREATE TABLE IF NOT EXISTS public.SupplyOrderPayment(

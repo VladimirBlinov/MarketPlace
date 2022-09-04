@@ -1,6 +1,9 @@
 package teststore
 
-import "github.com/VladimirBlinov/MarketPlace/internal/app/model"
+import (
+	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
+)
 
 type ProductRepo struct {
 	store    *Store
@@ -16,4 +19,18 @@ func (r *ProductRepo) Create(p *model.Product) error {
 	r.products[p.ProductID] = p
 
 	return nil
+}
+
+func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
+	productsList := make([]*model.Product, len(r.products))
+	for _, product := range r.products {
+		if product.UserID == userId {
+			productsList = append(productsList, product)
+		}
+	}
+	if len(productsList) < 1 {
+		return nil, store.ErrRecordNotFound
+	}
+
+	return productsList, nil
 }

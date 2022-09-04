@@ -10,7 +10,7 @@ type SupplyOrder struct {
 	SupplierID             int
 	ShippingCostToLogistic float32
 	ShippingCostByLogistic float32
-	Avtive                 bool
+	Active                 bool
 }
 
 type SupplyOrderProduct struct {
@@ -29,7 +29,7 @@ type Supplier struct {
 	SupplierCountryID     int
 	SupplierSWIFT         string
 	SupplierAccountNumber int
-	Avtive                bool
+	Active                bool
 }
 
 type SupplyOrderStatus struct {
@@ -56,7 +56,7 @@ type Payment struct {
 	SupplierID      int
 	SupplyOrderID   int
 	PaymentStatusID int
-	Avtive          bool
+	Active          bool
 }
 
 type SupplyOrderPayment struct {
@@ -71,7 +71,7 @@ type SupplyOrderAudit struct {
 	SupplyOrderAuditDate time.Time
 	SupplyOrderStatusID  int
 	AuditUserID          int
-	Avtive               bool
+	Active               bool
 }
 
 type PaymentAudit struct {
@@ -80,5 +80,5 @@ type PaymentAudit struct {
 	PaymentAuditDate time.Time
 	PaymentStatusID  int
 	AuditUserID      int
-	Avtive           bool
+	Active           bool
 }

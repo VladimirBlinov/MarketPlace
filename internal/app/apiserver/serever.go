@@ -68,7 +68,38 @@ func (s *server) ConfigureRouter() {
 	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
 	private.HandleFunc("/signout", s.handleSignOut()).Methods("GET")
 	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
+	private.HandleFunc("/product_list", s.handleProductGetListByUserId()).Methods("GET")
 
+}
+
+func (s *server) handleProductGetListByUserId() http.HandlerFunc {
+	type Product struct {
+		ProductID    int     `json:"product_id"`
+		ProductName  string  `json:"product_name"`
+		CategoryID   int     `json:"category_id,string"`
+		PiecesInPack int     `json:"pieces_in_pack,string"`
+		MaterialID   int     `json:"material_id,string"`
+		Weight       float32 `json:"weight,string"`
+		Lenght       float32 `json:"lenght,string"`
+		Width        float32 `json:"width,string"`
+		Height       float32 `json:"height,string"`
+		Description  string  `json:"description"`
+		UserID       int     `json:"user_id"`
+		Active       bool    `json:"active"`
+	}
+
+	type Prducts []Product
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		u := r.Context().Value(ctxKeyUser).(*model.User)
+		products, err := s.store.Product().FindByUserId(u.ID)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, products)
+	}
 }
 
 func (s *server) setRequestID(next http.Handler) http.Handler {
@@ -230,6 +261,7 @@ func (s *server) handleSessionsCreate() http.HandlerFunc {
 		u, err := s.store.User().FindByEmail(req.Email)
 		if err != nil || !u.ComparePassword(req.Password) {
 			s.error(w, r, http.StatusUnauthorized, errIncorectEmailOrPassword)
+			return
 		}
 
 		session, err := s.sessionStore.Get(r, SessionName)

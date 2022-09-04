@@ -37,7 +37,7 @@ func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	var products []*model.Product
 
 	rows, err := r.store.db.Query(
-		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active, FROM public.Product WHERE active = 1 and userid = $1",
+		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active FROM public.Product WHERE active = true and user_id = $1",
 		userId,
 	)
 
@@ -51,7 +51,7 @@ func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		p := &model.Product{}
+		p := new(model.Product)
 		if err := rows.Scan(
 			&p.ProductID,
 			&p.ProductName,

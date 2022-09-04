@@ -22,3 +22,25 @@ func TestProductRepo_Create(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
 }
+
+func TestProductRepo_FindByUserId(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("product", "users")
+
+	s := sqlstore.New(db)
+	u := model.TestUser(t)
+	s.User().Create(u)
+
+	p1 := model.TestProduct(t)
+	p2 := model.TestProduct(t)
+
+	p1.UserID = u.ID
+	s.Product().Create(p1)
+	p2.UserID = u.ID
+	s.Product().Create(p2)
+
+	productsList, err := s.Product().FindByUserId(u.ID)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(productsList))
+}

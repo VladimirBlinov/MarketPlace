@@ -73,23 +73,6 @@ func (s *server) ConfigureRouter() {
 }
 
 func (s *server) handleProductGetListByUserId() http.HandlerFunc {
-	type Product struct {
-		ProductID    int     `json:"product_id"`
-		ProductName  string  `json:"product_name"`
-		CategoryID   int     `json:"category_id,string"`
-		PiecesInPack int     `json:"pieces_in_pack,string"`
-		MaterialID   int     `json:"material_id,string"`
-		Weight       float32 `json:"weight,string"`
-		Lenght       float32 `json:"lenght,string"`
-		Width        float32 `json:"width,string"`
-		Height       float32 `json:"height,string"`
-		Description  string  `json:"description"`
-		UserID       int     `json:"user_id"`
-		Active       bool    `json:"active"`
-	}
-
-	type Prducts []Product
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		u := r.Context().Value(ctxKeyUser).(*model.User)
 		products, err := s.store.Product().FindByUserId(u.ID)

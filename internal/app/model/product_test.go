@@ -25,7 +25,7 @@ func Test_ProductValidate(t *testing.T) {
 			name: "wrong category ID",
 			p: func() *model.Product {
 				p := model.TestProduct(t)
-				p.CategoryID = 1000
+				p.CategoryID = 0
 				return p
 			},
 			isValid: false,

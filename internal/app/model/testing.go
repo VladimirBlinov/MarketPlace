@@ -23,7 +23,7 @@ func TestAdminUser(t *testing.T) *User {
 func TestProduct(t *testing.T) *Product {
 	return &Product{
 		ProductName:  "Менажница",
-		CategoryID:   1111110000,
+		CategoryID:   105,
 		PiecesInPack: 1,
 		MaterialID:   1,
 		Weight:       500,

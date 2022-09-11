@@ -74,7 +74,7 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			name: "valid",
 			payload: map[string]string{
 				"product_name":   "product",
-				"category_id":    "1111110000",
+				"category_id":    "105",
 				"pieces_in_pack": "1",
 				"material_id":    "1",
 				"weight":         "500",
@@ -88,6 +88,31 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusCreated,
+		},
+		{
+			name: "valid_minimum_params",
+			payload: map[string]string{
+				"product_name": "product",
+				"category_id":  "105",
+				"material_id":  "1",
+			},
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusCreated,
+		},
+		{
+			name: "invalid_not_enaugh_params",
+			payload: map[string]string{
+				"product_name": "product",
+				"material_id":  "1",
+			},
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusUnprocessableEntity,
 		},
 	}
 	for _, tc := range testCases {
@@ -268,14 +293,14 @@ func TestServer_HandleSessionsCreate(t *testing.T) {
 			},
 			expectedCode: http.StatusUnauthorized,
 		},
-		// {
-		// 	name: "invalid password",
-		// 	payload: map[string]string{
-		// 		"email":    u.Email,
-		// 		"password": "invalid",
-		// 	},
-		// 	expectedCode: http.StatusUnauthorized,
-		// },
+		{
+			name: "invalid password",
+			payload: map[string]string{
+				"email":    u.Email,
+				"password": "invalid",
+			},
+			expectedCode: http.StatusUnauthorized,
+		},
 	}
 
 	for _, tc := range testCases {

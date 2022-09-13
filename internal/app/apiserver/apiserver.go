@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store/sqlstore"
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
+	"github.com/VladimirBlinov/MarketPlace/internal/store/sqlstore"
 	"github.com/gorilla/sessions"
 )
 

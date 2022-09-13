@@ -9,9 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store/teststore"
+	"github.com/VladimirBlinov/MarketPlace/internal/model"
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
+	"github.com/VladimirBlinov/MarketPlace/internal/store/teststore"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"

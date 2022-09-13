@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
+	"github.com/VladimirBlinov/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/store"
 )
 
 type ProductService struct {

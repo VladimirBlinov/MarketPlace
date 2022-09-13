@@ -3,9 +3,9 @@ package sqlstore_test
 import (
 	"testing"
 
-	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store/sqlstore"
+	"github.com/VladimirBlinov/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/store"
+	"github.com/VladimirBlinov/MarketPlace/internal/store/sqlstore"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -3,7 +3,7 @@ package sqlstore
 import (
 	"database/sql"
 
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
+	"github.com/VladimirBlinov/MarketPlace/internal/store"
 	_ "github.com/lib/pq"
 )
 

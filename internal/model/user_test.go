@@ -3,7 +3,7 @@ package model_test
 import (
 	"testing"
 
-	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 

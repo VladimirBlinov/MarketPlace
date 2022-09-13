@@ -1,6 +1,6 @@
 package store
 
-import "github.com/VladimirBlinov/MarketPlace/internal/app/model"
+import "github.com/VladimirBlinov/MarketPlace/internal/model"
 
 type UserRepo interface {
 	Create(*model.User) error

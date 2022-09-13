@@ -3,8 +3,8 @@ package teststore_test
 import (
 	"testing"
 
-	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
-	"github.com/VladimirBlinov/MarketPlace/internal/app/store/teststore"
+	"github.com/VladimirBlinov/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/store/teststore"
 	"github.com/stretchr/testify/assert"
 )
 

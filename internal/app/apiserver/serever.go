@@ -9,6 +9,7 @@ import (
 
 	"github.com/VladimirBlinov/MarketPlace/internal/app/model"
 	"github.com/VladimirBlinov/MarketPlace/internal/app/store"
+	"github.com/VladimirBlinov/MarketPlace/internal/service"
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -34,14 +35,16 @@ type server struct {
 	logger       *logrus.Logger
 	store        store.Store
 	sessionStore sessions.Store
+	service      service.Service
 }
 
-func newServer(store store.Store, sessionStore sessions.Store) *server {
+func newServer(store store.Store, sessionStore sessions.Store, service service.Service) *server {
 	s := &server{
 		router:       mux.NewRouter(),
 		logger:       logrus.New(),
 		store:        store,
 		sessionStore: sessionStore,
+		service:      service,
 	}
 
 	s.ConfigureRouter()
@@ -157,45 +160,51 @@ func (s *server) handleSignOut() http.HandlerFunc {
 }
 
 func (s *server) handleProductCreate() http.HandlerFunc {
-	type requestProduct struct {
-		ProductName  string  `json:"product_name"`
-		CategoryID   int     `json:"category_id,string"`
-		PiecesInPack int     `json:"pieces_in_pack,string"`
-		MaterialID   int     `json:"material_id,string"`
-		Weight       float32 `json:"weight,string"`
-		Lenght       float32 `json:"lenght,string"`
-		Width        float32 `json:"width,string"`
-		Height       float32 `json:"height,string"`
-		Description  string  `json:"description"`
-	}
+	// type requestProduct struct {
+	// 	ProductName  string  `json:"product_name"`
+	// 	CategoryID   int     `json:"category_id,string"`
+	// 	PiecesInPack int     `json:"pieces_in_pack,string"`
+	// 	MaterialID   int     `json:"material_id,string"`
+	// 	Weight       float32 `json:"weight,string"`
+	// 	Lenght       float32 `json:"lenght,string"`
+	// 	Width        float32 `json:"width,string"`
+	// 	Height       float32 `json:"height,string"`
+	// 	Description  string  `json:"description"`
+	// }
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &requestProduct{}
+		//req := &requestProduct{}
+		req := &service.RequestProduct{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
 
-		p := &model.Product{
-			ProductName:  req.ProductName,
-			CategoryID:   req.CategoryID,
-			PiecesInPack: req.PiecesInPack,
-			MaterialID:   req.MaterialID,
-			Weight:       req.Weight,
-			Lenght:       req.Lenght,
-			Width:        req.Weight,
-			Height:       req.Height,
-			Description:  req.Description,
-			UserID:       r.Context().Value(ctxKeyUser).(*model.User).ID,
-			Active:       true,
-		}
+		// p := &model.Product{
+		// 	ProductName:  req.ProductName,
+		// 	CategoryID:   req.CategoryID,
+		// 	PiecesInPack: req.PiecesInPack,
+		// 	MaterialID:   req.MaterialID,
+		// 	Weight:       req.Weight,
+		// 	Lenght:       req.Lenght,
+		// 	Width:        req.Weight,
+		// 	Height:       req.Height,
+		// 	Description:  req.Description,
+		// 	UserID:       r.Context().Value(ctxKeyUser).(*model.User).ID,
+		// 	Active:       true,
+		// }
 
-		if err := s.store.Product().Create(p); err != nil {
+		if err := s.service.ProductService.CreateProduct(*req, r.Context().Value(ctxKeyUser).(*model.User).ID); err != nil {
 			s.error(w, r, http.StatusUnprocessableEntity, err)
 			return
 		}
 
-		s.respond(w, r, http.StatusCreated, p)
+		// if err := s.store.Product().Create(p); err != nil {
+		// 	s.error(w, r, http.StatusUnprocessableEntity, err)
+		// 	return
+		// }
+
+		s.respond(w, r, http.StatusCreated, nil)
 	}
 }
 

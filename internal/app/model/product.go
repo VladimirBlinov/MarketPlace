@@ -21,7 +21,8 @@ func (p *Product) Validate() error {
 	return validation.ValidateStruct(
 		p,
 		validation.Field(&p.ProductName, validation.Required, validation.Length(1, 200)),
-		validation.Field(&p.CategoryID, validation.Required, validation.By(checkCategoryID(1))),
+		validation.Field(&p.CategoryID, validation.Required),
+		//validation.Field(&p.CategoryID, validation.Required, validation.By(checkCategoryID(1))),
 		validation.Field(&p.MaterialID, validation.Required),
 		validation.Field(&p.UserID, validation.Required),
 		// validation.Field(&p.Active, validation.Required),

@@ -18,3 +18,7 @@ INSERT INTO public.users(
 	id, email, encryptedpassword, userrole, active)
 	VALUES 
     (1, 'admin@test.org', 'qazwsx', 1, true);
+
+INSERT INTO public.marketplace(
+	marketplace_id, marketplace_name, active)
+	VALUES (1, 'ozon', true);

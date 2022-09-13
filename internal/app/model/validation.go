@@ -2,7 +2,6 @@ package model
 
 import (
 	"errors"
-	"strconv"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -21,7 +20,7 @@ func checkCategoryID(catId int) validation.RuleFunc {
 	return func(value interface{}) error {
 		s, _ := value.(int)
 		if s < catId {
-			return errors.New("must be greater or equal " + strconv.Itoa(catId))
+			return errors.New("must be greater or equal 1")
 		}
 		return nil
 	}

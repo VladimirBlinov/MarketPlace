@@ -35,9 +35,8 @@ CREATE TABLE public.MarketPlace(
 CREATE TABLE public.MarketPlaceItem(
     MarketPlaceItem_ID bigserial not null primary key,
 	Product_ID bigint not null references public.Product(Product_ID),
-    Item_Name varchar(200),
     MarketPlace_ID bigint not null references public.MarketPlace(MarketPlace_ID),
-    Barcode bigint not null,
+    SKU bigint not null,
     User_ID bigint not null references public.users(id),
 	Active boolean not null
 );

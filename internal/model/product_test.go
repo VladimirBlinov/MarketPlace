@@ -61,3 +61,48 @@ func Test_ProductValidate(t *testing.T) {
 	}
 
 }
+
+func Test_CategoryValidate(t *testing.T) {
+	testCases := []struct {
+		name    string
+		c       func() *model.Category
+		isValid bool
+	}{
+		{
+			name: "valid",
+			c: func() *model.Category {
+				return model.TestCategory(t)
+			},
+			isValid: true,
+		},
+		{
+			name: "wrong parent category ID",
+			c: func() *model.Category {
+				c := model.TestCategory(t)
+				c.ParentCategoryID = 0
+				return c
+			},
+			isValid: true,
+		},
+		{
+			name: "short name",
+			c: func() *model.Category {
+				c := model.TestCategory(t)
+				c.CategoryName = ""
+				return c
+			},
+			isValid: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isValid {
+				assert.NoError(t, tc.c().ValidateCategory())
+			} else {
+				assert.Error(t, tc.c().ValidateCategory())
+			}
+		})
+	}
+
+}

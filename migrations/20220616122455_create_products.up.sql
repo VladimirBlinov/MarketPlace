@@ -1,5 +1,5 @@
 CREATE TABLE public.Category(
-    Category_ID bigint not null primary key,
+    Category_ID bigserial not null primary key,
 	Category_Name varchar(200) not null,
     Parent_Category_ID bigint,
 	Active boolean not null

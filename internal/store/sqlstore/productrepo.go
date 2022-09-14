@@ -77,3 +77,61 @@ func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 
 	return products, nil
 }
+
+func (r *ProductRepo) CreateCategory(c *model.Category) error {
+	if err := c.ValidateCategory(); err != nil {
+		return err
+	}
+
+	return r.store.db.QueryRow(
+		"INSERT INTO public.category (category_name, parent_category_id, active) VALUES ($1, $2, $3) RETURNING category_id",
+		c.CategoryName,
+		NewNullInt(int64(c.ParentCategoryID)),
+		c.Active,
+	).Scan(&c.CategoryID)
+}
+
+func (r *ProductRepo) GetCategories() ([]*model.Category, error) {
+	categories := make([]*model.Category, 0)
+	rows, err := r.store.db.Query(
+		"SELECT category_id, category_name, parent_category_id, active FROM public.category WHERE active = true ORDER BY category_id",
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		c := new(model.Category)
+		if err := rows.Scan(
+			&c.CategoryID,
+			&c.CategoryName,
+			&c.ParentCategoryID,
+			&c.Active,
+		); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, store.ErrRecordNotFound
+			}
+			return nil, err
+		}
+
+		categories = append(categories, c)
+	}
+
+	return categories, nil
+}
+
+func NewNullInt(v int64) sql.NullInt64 {
+	if v == 0 {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{
+		Int64: v,
+		Valid: true,
+	}
+}

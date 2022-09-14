@@ -35,3 +35,11 @@ func TestProduct(t *testing.T) *Product {
 		Active:       true,
 	}
 }
+
+func TestCategory(t *testing.T) *Category {
+	return &Category{
+		CategoryName:     "Менажница Деревянная",
+		ParentCategoryID: 104,
+		Active:           true,
+	}
+}

@@ -11,4 +11,6 @@ type UserRepo interface {
 type ProductRepo interface {
 	Create(*model.Product) error
 	FindByUserId(int) ([]*model.Product, error)
+	GetCategories() ([]*model.Category, error)
+	CreateCategory(*model.Category) error
 }

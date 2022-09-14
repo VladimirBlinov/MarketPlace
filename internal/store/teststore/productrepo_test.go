@@ -37,3 +37,17 @@ func TestProductRepo_FindByUserId(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(productsList))
 }
+
+func TestProductRepo_GetCategories(t *testing.T) {
+	s := teststore.New()
+	c1 := model.TestCategory(t)
+	c2 := model.TestCategory(t)
+
+	s.Product().CreateCategory(c1)
+	s.Product().CreateCategory(c2)
+
+	categories, err := s.Product().GetCategories()
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(categories))
+}

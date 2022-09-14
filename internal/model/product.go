@@ -45,6 +45,13 @@ type Category struct {
 	Active           bool
 }
 
+func (c *Category) ValidateCategory() error {
+	return validation.ValidateStruct(
+		c,
+		validation.Field(&c.CategoryName, validation.Required, validation.Length(3, 200)),
+	)
+}
+
 type MarketPlace struct {
 	MarketPlaceID   int
 	MarketPlaceName string

@@ -72,20 +72,8 @@ func (s *server) ConfigureRouter() {
 	private.HandleFunc("/signout", s.handleSignOut()).Methods("GET")
 	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
 	private.HandleFunc("/product_list", s.handleProductGetListByUserId()).Methods("GET")
+	private.HandleFunc("/product_category/get_category", s.handleProductCategoryGetAll()).Methods("GET")
 
-}
-
-func (s *server) handleProductGetListByUserId() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		u := r.Context().Value(ctxKeyUser).(*model.User)
-		products, err := s.store.Product().FindByUserId(u.ID)
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
-		s.respond(w, r, http.StatusOK, products)
-	}
 }
 
 func (s *server) setRequestID(next http.Handler) http.Handler {
@@ -159,23 +147,6 @@ func (s *server) handleSignOut() http.HandlerFunc {
 	}
 }
 
-func (s *server) handleProductCreate() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req := &service.RequestProduct{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-			s.error(w, r, http.StatusBadRequest, err)
-			return
-		}
-
-		if err := s.service.ProductService.CreateProduct(*req, r.Context().Value(ctxKeyUser).(*model.User).ID); err != nil {
-			s.error(w, r, http.StatusUnprocessableEntity, err)
-			return
-		}
-
-		s.respond(w, r, http.StatusCreated, nil)
-	}
-}
-
 func (s *server) handleUsersCreate() http.HandlerFunc {
 	type request struct {
 		Email    string `json:"email"`
@@ -237,6 +208,49 @@ func (s *server) handleSessionsCreate() http.HandlerFunc {
 		}
 
 		s.respond(w, r, http.StatusOK, nil)
+	}
+}
+
+func (s *server) handleProductCreate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &service.RequestProduct{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := s.service.ProductService.CreateProduct(*req, r.Context().Value(ctxKeyUser).(*model.User).ID); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusCreated, nil)
+	}
+}
+
+func (s *server) handleProductGetListByUserId() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u := r.Context().Value(ctxKeyUser).(*model.User)
+
+		products, err := s.service.ProductService.GetProductsByUserId(u.ID)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, products)
+	}
+}
+
+func (s *server) handleProductCategoryGetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		categories, err := s.service.ProductService.GetProductCategories()
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, categories)
 	}
 }
 

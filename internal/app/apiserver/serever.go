@@ -73,6 +73,7 @@ func (s *server) ConfigureRouter() {
 	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
 	private.HandleFunc("/product_list", s.handleProductGetListByUserId()).Methods("GET")
 	private.HandleFunc("/product_category/get_categories", s.handleProductCategoryGetAll()).Methods("GET")
+	private.HandleFunc("/product_category/get_materials", s.handleProductGetMaterials()).Methods("GET")
 
 }
 
@@ -251,6 +252,18 @@ func (s *server) handleProductCategoryGetAll() http.HandlerFunc {
 		}
 
 		s.respond(w, r, http.StatusOK, categories)
+	}
+}
+
+func (s *server) handleProductGetMaterials() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		materials, err := s.service.ProductService.GetProductMaterials()
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, materials)
 	}
 }
 

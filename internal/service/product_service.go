@@ -68,3 +68,12 @@ func (ps *ProductService) GetProductCategories() ([]*model.Category, error) {
 
 	return categories, nil
 }
+
+func (ps *ProductService) GetProductMaterials() ([]*model.Material, error) {
+	materials, err := ps.store.Product().GetMaterials()
+	if err != nil {
+		return nil, err
+	}
+
+	return materials, nil
+}

@@ -226,6 +226,53 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	}
 }
 
+func TestServer_HandleProductGetMaterials(t *testing.T) {
+	store := teststore.New()
+	service := service.NewService(store)
+	u := model.TestUser(t)
+	store.User().Create(u)
+
+	m := model.TestMaterial(t)
+	m.MaterialName = "Дерево"
+	store.Product().CreateMaterial(m)
+
+	m1 := model.TestMaterial(t)
+	m1.MaterialName = "Пластик"
+	store.Product().CreateMaterial(m1)
+
+	secretKey := []byte("secret_key")
+	s := newServer(store, sessions.NewCookieStore(secretKey), *service)
+	sc := securecookie.New(secretKey, nil)
+
+	testCases := []struct {
+		name         string
+		context      *model.User
+		coockieValue map[interface{}]interface{}
+		expectedCode int
+	}{
+		{
+			name:    "valid",
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodGet, "/private/product_category/get_materials", nil)
+			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			s.ServeHTTP(rec, req.WithContext(ctx))
+			assert.Equal(t, tc.expectedCode, rec.Code)
+			assert.NotEqual(t, 0, rec.Result().ContentLength)
+		})
+	}
+}
+
 func TestServer_AuthenticateUser(t *testing.T) {
 	userStore := teststore.New()
 	service := service.NewService(userStore)

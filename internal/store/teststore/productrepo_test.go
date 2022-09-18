@@ -13,6 +13,8 @@ func TestProductRepo_Create(t *testing.T) {
 	u := model.TestUser(t)
 	p := model.TestProduct(t)
 
+	s.User().Create(u)
+
 	p.UserID = u.ID
 
 	assert.NoError(t, s.Product().Create(p))
@@ -50,4 +52,27 @@ func TestProductRepo_GetCategories(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(categories))
+}
+
+func TestProductRepo_CreateMaterial(t *testing.T) {
+	s := teststore.New()
+	m := model.TestMaterial(t)
+
+	assert.NoError(t, s.Product().CreateMaterial(m))
+	assert.NotNil(t, m)
+}
+
+func TestProductRepo_GetMaterials(t *testing.T) {
+	s := teststore.New()
+
+	m := model.TestMaterial(t)
+	m1 := model.TestMaterial(t)
+
+	s.Product().CreateMaterial(m)
+	s.Product().CreateMaterial(m1)
+
+	materials, err := s.Product().GetMaterials()
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(materials))
 }

@@ -1,6 +1,8 @@
 package model
 
-import validation "github.com/go-ozzo/ozzo-validation"
+import (
+	validation "github.com/go-ozzo/ozzo-validation"
+)
 
 type Product struct {
 	ProductID    int     `json:"product_id"`
@@ -22,7 +24,7 @@ func (p *Product) Validate() error {
 		p,
 		validation.Field(&p.ProductName, validation.Required, validation.Length(1, 200)),
 		validation.Field(&p.CategoryID, validation.Required),
-		//validation.Field(&p.CategoryID, validation.Required, validation.By(checkCategoryID(1))),
+		validation.Field(&p.CategoryID, validation.Required, validation.By(checkCategoryID(1))),
 		validation.Field(&p.MaterialID, validation.Required),
 		validation.Field(&p.UserID, validation.Required),
 		// validation.Field(&p.Active, validation.Required),
@@ -39,10 +41,10 @@ type MarketPlaceItem struct {
 }
 
 type Category struct {
-	CategoryID       int
-	CategoryName     string
-	ParentCategoryID int
-	Active           bool
+	CategoryID       int    `json:"category_id"`
+	CategoryName     string `json:"category_name"`
+	ParentCategoryID int    `json:"parent_category_id"`
+	Active           bool   `json:"active"`
 }
 
 func (c *Category) ValidateCategory() error {
@@ -56,4 +58,16 @@ type MarketPlace struct {
 	MarketPlaceID   int
 	MarketPlaceName string
 	Active          bool
+}
+
+type Material struct {
+	MaterialID   int    `json:"material_id"`
+	MaterialName string `json:"material_name"`
+	Active       bool   `json:"active"`
+}
+
+func (m *Material) ValidateMaterial() error {
+	return validation.ValidateStruct(
+		m,
+		validation.Field(&m.MaterialName, validation.Required, validation.Length(3, 200)))
 }

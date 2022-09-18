@@ -9,11 +9,12 @@ type ProductRepo struct {
 	store      *Store
 	products   map[int]*model.Product
 	categories map[int]*model.Category
+	materials  map[int]*model.Material
 }
 
 func (r *ProductRepo) Create(p *model.Product) error {
 	if err := p.Validate(); err != nil {
-		return nil
+		return err
 	}
 
 	p.ProductID = len(r.products) + 1
@@ -51,11 +52,36 @@ func (r *ProductRepo) GetCategories() ([]*model.Category, error) {
 
 func (r *ProductRepo) CreateCategory(c *model.Category) error {
 	if err := c.ValidateCategory(); err != nil {
-		return nil
+		return err
 	}
 
 	c.CategoryID = len(r.categories) + 1
 	r.categories[c.CategoryID] = c
 
 	return nil
+}
+
+func (r *ProductRepo) CreateMaterial(m *model.Material) error {
+	if err := m.ValidateMaterial(); err != nil {
+		return err
+	}
+
+	m.MaterialID = len(r.materials) + 1
+	r.materials[m.MaterialID] = m
+
+	return nil
+}
+
+func (r *ProductRepo) GetMaterials() ([]*model.Material, error) {
+	materials := make([]*model.Material, 0)
+
+	for _, material := range r.materials {
+		materials = append(materials, material)
+	}
+
+	if len(materials) < 1 {
+		return nil, store.ErrRecordNotFound
+	}
+
+	return materials, nil
 }

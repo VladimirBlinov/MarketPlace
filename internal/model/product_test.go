@@ -104,5 +104,31 @@ func Test_CategoryValidate(t *testing.T) {
 			}
 		})
 	}
+}
 
+func Test_MaterialValidate(t *testing.T) {
+	testCases := []struct {
+		name    string
+		m       func() *model.Material
+		isValid bool
+	}{
+		{
+			name: "valid",
+			m: func() *model.Material {
+				m := model.TestMaterial(t)
+				return m
+			},
+			isValid: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isValid {
+				assert.NoError(t, tc.m().ValidateMaterial())
+			} else {
+				assert.Error(t, tc.m().ValidateMaterial())
+			}
+		})
+	}
 }

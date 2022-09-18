@@ -10,7 +10,7 @@ import (
 
 func TestProductRepo_Create(t *testing.T) {
 	db, teardown := sqlstore.TestDB(t, databaseURL)
-	defer teardown("product", "users", "category")
+	defer teardown("product", "users", "category", "material")
 
 	s := sqlstore.New(db)
 	u := model.TestAdminUser(t)
@@ -19,9 +19,13 @@ func TestProductRepo_Create(t *testing.T) {
 	c := model.TestCategory(t)
 	s.Product().CreateCategory(c)
 
+	m := model.TestMaterial(t)
+	s.Product().CreateMaterial(m)
+
 	p := model.TestProduct(t)
 	p.UserID = u.ID
 	p.CategoryID = c.CategoryID
+	p.MaterialID = m.MaterialID
 	err := s.Product().Create(p)
 
 	assert.NoError(t, err)
@@ -39,14 +43,19 @@ func TestProductRepo_FindByUserId(t *testing.T) {
 	c := model.TestCategory(t)
 	s.Product().CreateCategory(c)
 
+	m := model.TestMaterial(t)
+	s.Product().CreateMaterial(m)
+
 	p1 := model.TestProduct(t)
 	p2 := model.TestProduct(t)
 
 	p1.UserID = u.ID
 	p1.CategoryID = c.CategoryID
+	p1.MaterialID = m.MaterialID
 	s.Product().Create(p1)
 	p2.UserID = u.ID
 	p2.CategoryID = c.CategoryID
+	p2.MaterialID = m.MaterialID
 	s.Product().Create(p2)
 
 	productsList, err := s.Product().FindByUserId(u.ID)
@@ -62,6 +71,8 @@ func TestProductRepo_GetCategories(t *testing.T) {
 	s := sqlstore.New(db)
 	c1 := model.TestCategory(t)
 	c2 := model.TestCategory(t)
+
+	c1.ParentCategoryID = 0
 
 	s.Product().CreateCategory(c1)
 	s.Product().CreateCategory(c2)
@@ -112,4 +123,54 @@ func TestProductRepo_CreateCategory(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProductRepo_CreateMaterial(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("material")
+
+	s := sqlstore.New(db)
+
+	testCases := []struct {
+		name     string
+		material func() *model.Material
+		isValid  bool
+	}{
+		{
+			name: "valid",
+			material: func() *model.Material {
+				m := *model.TestMaterial(t)
+				return &m
+			},
+			isValid: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isValid {
+				assert.NoError(t, s.Product().CreateMaterial(tc.material()))
+			} else {
+				assert.Error(t, s.Product().CreateMaterial(tc.material()))
+			}
+		})
+	}
+}
+
+func TestProductRepo_GetMaterials(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("material")
+
+	s := sqlstore.New(db)
+
+	m := model.TestMaterial(t)
+	m1 := model.TestMaterial(t)
+
+	s.Product().CreateMaterial(m)
+	s.Product().CreateMaterial(m1)
+
+	materials, err := s.Product().GetMaterials()
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(materials))
 }

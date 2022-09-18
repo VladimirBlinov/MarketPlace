@@ -106,19 +106,19 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			},
 			expectedCode: http.StatusCreated,
 		},
-		// {
-		// 	name: "invalid_less_params",
-		// 	payload: map[string]string{
-		// 		"product_name": "product",
-		// 		"material_id":  "1",
-		// 		"category_id":  "0",
-		// 	},
-		// 	context: u,
-		// 	coockieValue: map[interface{}]interface{}{
-		// 		"user_id": u.ID,
-		// 	},
-		// 	expectedCode: http.StatusUnprocessableEntity,
-		// },
+		{
+			name: "invalid_less_params",
+			payload: map[string]string{
+				"product_name": "product",
+				"material_id":  "1",
+				//"category_id":  "0",
+			},
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusUnprocessableEntity,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -215,7 +215,7 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product_category/get_category", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product_category/get_categories", nil)
 			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)

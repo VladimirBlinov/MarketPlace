@@ -13,4 +13,6 @@ type ProductRepo interface {
 	FindByUserId(int) ([]*model.Product, error)
 	GetCategories() ([]*model.Category, error)
 	CreateCategory(*model.Category) error
+	CreateMaterial(*model.Material) error
+	GetMaterials() ([]*model.Material, error)
 }

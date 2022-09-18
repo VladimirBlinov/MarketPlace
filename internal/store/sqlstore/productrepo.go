@@ -94,7 +94,7 @@ func (r *ProductRepo) CreateCategory(c *model.Category) error {
 func (r *ProductRepo) GetCategories() ([]*model.Category, error) {
 	categories := make([]*model.Category, 0)
 	rows, err := r.store.db.Query(
-		"SELECT category_id, category_name, parent_category_id, active FROM public.category WHERE active = true ORDER BY category_id",
+		"SELECT category_id, category_name, coalesce(parent_category_id,0), active FROM public.category WHERE active = true ORDER BY category_id",
 	)
 
 	if err != nil {
@@ -124,6 +124,53 @@ func (r *ProductRepo) GetCategories() ([]*model.Category, error) {
 	}
 
 	return categories, nil
+}
+
+func (r *ProductRepo) CreateMaterial(m *model.Material) error {
+	if err := m.ValidateMaterial(); err != nil {
+		return err
+	}
+	return r.store.db.QueryRow(
+		"INSERT INTO public.material (material_name, active) VALUES ($1, $2) RETURNING material_id",
+		m.MaterialName,
+		m.Active,
+	).Scan(&m.MaterialID)
+
+	return nil
+}
+
+func (r *ProductRepo) GetMaterials() ([]*model.Material, error) {
+	materials := make([]*model.Material, 0)
+
+	rows, err := r.store.db.Query(
+		"SELECT material_id, material_name, active FROM public.material where active = true ORDER BY material_name")
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		m := new(model.Material)
+		{
+			if err := rows.Scan(
+				&m.MaterialID,
+				&m.MaterialName,
+				&m.Active,
+			); err != nil {
+				if err == sql.ErrNoRows {
+					return nil, store.ErrRecordNotFound
+				}
+				return nil, err
+			}
+		}
+		materials = append(materials, m)
+	}
+	return materials, nil
 }
 
 func NewNullInt(v int64) sql.NullInt64 {

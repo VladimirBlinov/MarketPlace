@@ -72,7 +72,7 @@ func (s *server) ConfigureRouter() {
 	private.HandleFunc("/signout", s.handleSignOut()).Methods("GET")
 	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
 	private.HandleFunc("/product_list", s.handleProductGetListByUserId()).Methods("GET")
-	private.HandleFunc("/product_category/get_category", s.handleProductCategoryGetAll()).Methods("GET")
+	private.HandleFunc("/product_category/get_categories", s.handleProductCategoryGetAll()).Methods("GET")
 
 }
 

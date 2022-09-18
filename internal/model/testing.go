@@ -43,3 +43,10 @@ func TestCategory(t *testing.T) *Category {
 		Active:           true,
 	}
 }
+
+func TestMaterial(t *testing.T) *Material {
+	return &Material{
+		MaterialName: "Менажница Деревянная",
+		Active:       true,
+	}
+}

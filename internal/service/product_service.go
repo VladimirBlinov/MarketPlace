@@ -19,8 +19,8 @@ type RequestProduct struct {
 	Width          float32 `json:"width,string"`
 	Height         float32 `json:"height,string"`
 	Description    string  `json:"description"`
-	MarketPlaceID  int     `json:"marketplace_id"`
-	MarketPlaceSKU int     `json:"marketplace_sku"`
+	WildberriesSKU string  `json:"wildberries_sku"`
+	OzonSKU        string  `json:"ozon_sku"`
 }
 
 func NewProductService(store store.Store) *ProductService {

@@ -348,8 +348,8 @@ INSERT INTO public.category(
     ,(415, 'Товары для крещения', 248, true)
     ,(416, 'Товары к Пасхе', 248, true)
     ,(417, 'Блюда', 250, true)
-    ,(418, 'Менажницы', 418, true)
-    ,(419, 'Деревянные менажницы', 419, true);
+    ,(418, 'Менажницы', 417, true)
+    ,(419, 'Деревянные менажницы', 418, true);
 
 INSERT INTO public.material(
 	material_id, material_name, active)

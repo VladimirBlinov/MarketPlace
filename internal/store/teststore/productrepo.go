@@ -1,6 +1,7 @@
 package teststore
 
 import (
+	"errors"
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
 	"github.com/VladimirBlinov/MarketPlace/internal/store"
 )
@@ -30,6 +31,18 @@ func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	productsList := make([]*model.Product, 0)
 	for _, product := range r.products {
 		if product.UserID == userId {
+			for _, mpi := range r.marketPlaceItems {
+				if mpi.ProductID == product.ProductID {
+					switch mpi.MarketPlaceID {
+					case 1:
+						product.OzonSKU = mpi.SKU
+					case 2:
+						product.WildberriesSKU = mpi.SKU
+					default:
+						return nil, errors.New("wrong MarketPlaceID")
+					}
+				}
+			}
 			productsList = append(productsList, product)
 		}
 	}
@@ -87,15 +100,4 @@ func (r *ProductRepo) GetMaterials() ([]*model.Material, error) {
 	}
 
 	return materials, nil
-}
-
-func (r *ProductRepo) CreateMarketPlaceItem(mpi *model.MarketPlaceItem) error {
-	if err := mpi.ValidateMarketPlaceItem(); err != nil {
-		return err
-	}
-
-	mpi.MarketPlaceItemID = len(r.marketPlaceItems)
-	r.marketPlaceItems[mpi.MarketPlaceItemID] = mpi
-
-	return nil
 }

@@ -16,5 +16,4 @@ type ProductRepo interface {
 	CreateCategory(*model.Category) error
 	CreateMaterial(*model.Material) error
 	GetMaterials() ([]*model.Material, error)
-	CreateMarketPlaceItem(item *model.MarketPlaceItem) error
 }

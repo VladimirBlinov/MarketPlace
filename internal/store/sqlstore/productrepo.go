@@ -41,9 +41,10 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 	}
 
 	for _, mpi := range mpiList.MPIList {
+		mpi.ProductID = p.ProductID
 		err := r.store.db.QueryRow(
 			"INSERT INTO public.marketplaceitem (product_id, marketplace_id, sku, user_id, active) VALUES ($1, $2, $3, $4, $5) RETURNING marketplaceitem_id",
-			p.ProductID,
+			mpi.ProductID,
 			mpi.MarketPlaceID,
 			mpi.SKU,
 			mpi.UserID,
@@ -63,11 +64,12 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 }
 
 func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
-
 	var products []*model.Product
-
 	rows, err := r.store.db.Query(
-		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active FROM public.Product WHERE active = true and user_id = $1",
+		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active"+
+			", (select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1) "+
+			", (select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2) "+
+			"FROM public.product as p WHERE active = true and user_id = $1",
 		userId,
 	)
 
@@ -95,6 +97,8 @@ func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 			&p.Description,
 			&p.UserID,
 			&p.Active,
+			&p.OzonSKU,
+			&p.WildberriesSKU,
 		); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, store.ErrRecordNotFound
@@ -201,22 +205,6 @@ func (r *ProductRepo) GetMaterials() ([]*model.Material, error) {
 		materials = append(materials, m)
 	}
 	return materials, nil
-}
-
-func (r *ProductRepo) CreateMarketPlaceItem(mpi *model.MarketPlaceItem) error {
-	if err := mpi.ValidateMarketPlaceItem(); err != nil {
-		return err
-	}
-	return r.store.db.QueryRow(
-		"INSERT INTO public.marketplaceitem (product_id, marketplace_id, sku, user_id, active) VALUES ($1, $2, $3, $4, $5) RETURNING marketplaceitem_id",
-		mpi.ProductID,
-		mpi.MarketPlaceID,
-		mpi.SKU,
-		mpi.UserID,
-		mpi.Active,
-	).Scan(&mpi.MarketPlaceItemID)
-
-	return nil
 }
 
 func NewNullInt(v int64) sql.NullInt64 {

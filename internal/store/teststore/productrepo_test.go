@@ -46,6 +46,8 @@ func TestProductRepo_FindByUserId(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(productsList))
+	assert.NotNil(t, productsList[0].OzonSKU)
+	assert.NotNil(t, productsList[0].WildberriesSKU)
 }
 
 func TestProductRepo_GetCategories(t *testing.T) {
@@ -83,12 +85,4 @@ func TestProductRepo_GetMaterials(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(materials))
-}
-
-func TestProductRepo_CreateMarketPlaceItem(t *testing.T) {
-	s := teststore.New()
-	mpi := model.TestMarketPlaceItem(t)
-
-	assert.NoError(t, s.Product().CreateMarketPlaceItem(mpi))
-	assert.NotNil(t, mpi)
 }

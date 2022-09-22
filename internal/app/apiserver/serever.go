@@ -214,13 +214,18 @@ func (s *server) handleSessionsCreate() http.HandlerFunc {
 
 func (s *server) handleProductCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &service.RequestProduct{}
+		req := &service.InputProduct{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := s.service.ProductService.CreateProduct(*req, r.Context().Value(ctxKeyUser).(*model.User).ID); err != nil {
+		if req.UserID != r.Context().Value(ctxKeyUser).(*model.User).ID {
+			s.error(w, r, http.StatusUnauthorized, nil)
+			return
+		}
+
+		if err := s.service.ProductService.CreateProduct(*req); err != nil {
 			s.error(w, r, http.StatusUnprocessableEntity, err)
 			return
 		}

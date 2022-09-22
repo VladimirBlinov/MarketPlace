@@ -35,10 +35,11 @@ func (s *Store) Product() store.ProductRepo {
 	}
 
 	s.productRepo = &ProductRepo{
-		store:      s,
-		products:   make(map[int]*model.Product),
-		categories: make(map[int]*model.Category),
-		materials:  make(map[int]*model.Material),
+		store:            s,
+		products:         make(map[int]*model.Product),
+		categories:       make(map[int]*model.Category),
+		materials:        make(map[int]*model.Material),
+		marketPlaceItems: make(map[int]*model.MarketPlaceItem),
 	}
 	return s.productRepo
 }

@@ -9,7 +9,7 @@ type ProductService struct {
 	store store.Store
 }
 
-type RequestProduct struct {
+type InputProduct struct {
 	ProductName    string  `json:"product_name"`
 	CategoryID     int     `json:"category_id,string"`
 	PiecesInPack   int     `json:"pieces_in_pack,string"`
@@ -19,8 +19,9 @@ type RequestProduct struct {
 	Width          float32 `json:"width,string"`
 	Height         float32 `json:"height,string"`
 	Description    string  `json:"description"`
-	WildberriesSKU string  `json:"wildberries_sku"`
-	OzonSKU        string  `json:"ozon_sku"`
+	WildberriesSKU int     `json:"wildberries_sku,string"`
+	OzonSKU        int     `json:"ozon_sku,string"`
+	UserID         int     `json:"user_id,string"`
 }
 
 func NewProductService(store store.Store) *ProductService {
@@ -29,22 +30,33 @@ func NewProductService(store store.Store) *ProductService {
 	}
 }
 
-func (ps *ProductService) CreateProduct(reqProd RequestProduct, userId int) error {
+func (ps *ProductService) CreateProduct(reqProd InputProduct) error {
 	p := &model.Product{
-		ProductName:  reqProd.ProductName,
-		CategoryID:   reqProd.CategoryID,
-		PiecesInPack: reqProd.PiecesInPack,
-		MaterialID:   reqProd.MaterialID,
-		Weight:       reqProd.Weight,
-		Lenght:       reqProd.Lenght,
-		Width:        reqProd.Weight,
-		Height:       reqProd.Height,
-		Description:  reqProd.Description,
-		UserID:       userId,
-		Active:       true,
+		ProductName:    reqProd.ProductName,
+		CategoryID:     reqProd.CategoryID,
+		PiecesInPack:   reqProd.PiecesInPack,
+		MaterialID:     reqProd.MaterialID,
+		Weight:         reqProd.Weight,
+		Lenght:         reqProd.Lenght,
+		Width:          reqProd.Weight,
+		Height:         reqProd.Height,
+		Description:    reqProd.Description,
+		UserID:         reqProd.UserID,
+		Active:         true,
+		OzonSKU:        reqProd.OzonSKU,
+		WildberriesSKU: reqProd.WildberriesSKU,
 	}
 
-	if err := ps.store.Product().Create(p); err != nil {
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+
+	if err := p.Validate(); err != nil {
+		return err
+	}
+	if err := mpiList.ValidateMarketPlaceItems(); err != nil {
+		return err
+	}
+	if err := ps.store.Product().Create(p, mpiList); err != nil {
 		return err
 	}
 

@@ -5,18 +5,20 @@ import (
 )
 
 type Product struct {
-	ProductID    int     `json:"product_id"`
-	ProductName  string  `json:"product_name"`
-	CategoryID   int     `json:"category_id"`
-	PiecesInPack int     `json:"pieces_in_pack"`
-	MaterialID   int     `json:"material_id"`
-	Weight       float32 `json:"weight"`
-	Lenght       float32 `json:"lenght"`
-	Width        float32 `json:"width"`
-	Height       float32 `json:"height"`
-	Description  string  `json:"description"`
-	UserID       int     `json:"user_id"`
-	Active       bool    `json:"active"`
+	ProductID      int     `json:"product_id"`
+	ProductName    string  `json:"product_name"`
+	CategoryID     int     `json:"category_id"`
+	PiecesInPack   int     `json:"pieces_in_pack"`
+	MaterialID     int     `json:"material_id"`
+	Weight         float32 `json:"weight"`
+	Lenght         float32 `json:"lenght"`
+	Width          float32 `json:"width"`
+	Height         float32 `json:"height"`
+	Description    string  `json:"description"`
+	UserID         int     `json:"user_id"`
+	Active         bool    `json:"active"`
+	WildberriesSKU int     `json:"wildberries_sku"`
+	OzonSKU        int     `json:"ozon_sku"`
 }
 
 func (p *Product) Validate() error {
@@ -36,8 +38,56 @@ type MarketPlaceItem struct {
 	ProductID         int
 	ItemName          string
 	MarketPlaceID     int
-	Barcode           int
+	SKU               int
+	UserID            int
 	Active            bool
+}
+
+func (mpi *MarketPlaceItem) ValidateMarketPlaceItem() error {
+	return validation.ValidateStruct(
+		mpi,
+		validation.Field(&mpi.MarketPlaceID, validation.Required),
+		validation.Field(&mpi.UserID, validation.Required),
+	)
+}
+
+type MarketPlaceItemsList struct {
+	MPIList []*MarketPlaceItem
+}
+
+func (mpil *MarketPlaceItemsList) GetMPIList(p *Product) {
+	if p.OzonSKU != 0 {
+		mpiOzon := &MarketPlaceItem{
+			ItemName: p.ProductName,
+			UserID:   p.UserID,
+			Active:   true,
+		}
+		mpiOzon.MarketPlaceID = 1
+		mpiOzon.SKU = p.OzonSKU
+		mpil.MPIList = append(mpil.MPIList, mpiOzon)
+	}
+
+	if p.WildberriesSKU != 0 {
+		mpiWb := &MarketPlaceItem{
+			ItemName: p.ProductName,
+			UserID:   p.UserID,
+			Active:   true,
+		}
+		mpiWb.MarketPlaceID = 2
+		mpiWb.SKU = p.WildberriesSKU
+		mpil.MPIList = append(mpil.MPIList, mpiWb)
+	}
+}
+
+func (mpi *MarketPlaceItemsList) ValidateMarketPlaceItems() error {
+	for _, mpi := range mpi.MPIList {
+		err := mpi.ValidateMarketPlaceItem()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type Category struct {

@@ -6,19 +6,22 @@ import (
 )
 
 type ProductRepo struct {
-	store      *Store
-	products   map[int]*model.Product
-	categories map[int]*model.Category
-	materials  map[int]*model.Material
+	store            *Store
+	products         map[int]*model.Product
+	categories       map[int]*model.Category
+	materials        map[int]*model.Material
+	marketPlaceItems map[int]*model.MarketPlaceItem
 }
 
-func (r *ProductRepo) Create(p *model.Product) error {
-	if err := p.Validate(); err != nil {
-		return err
-	}
-
+func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsList) error {
 	p.ProductID = len(r.products) + 1
 	r.products[p.ProductID] = p
+
+	for _, mpi := range mpiList.MPIList {
+		mpi.ProductID = p.ProductID
+		mpi.MarketPlaceItemID = len(r.marketPlaceItems) + 1
+		r.marketPlaceItems[mpi.MarketPlaceItemID] = mpi
+	}
 
 	return nil
 }
@@ -84,4 +87,15 @@ func (r *ProductRepo) GetMaterials() ([]*model.Material, error) {
 	}
 
 	return materials, nil
+}
+
+func (r *ProductRepo) CreateMarketPlaceItem(mpi *model.MarketPlaceItem) error {
+	if err := mpi.ValidateMarketPlaceItem(); err != nil {
+		return err
+	}
+
+	mpi.MarketPlaceItemID = len(r.marketPlaceItems)
+	r.marketPlaceItems[mpi.MarketPlaceItemID] = mpi
+
+	return nil
 }

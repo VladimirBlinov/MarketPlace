@@ -22,17 +22,19 @@ func TestAdminUser(t *testing.T) *User {
 
 func TestProduct(t *testing.T) *Product {
 	return &Product{
-		ProductName:  "Менажница",
-		CategoryID:   105,
-		PiecesInPack: 1,
-		MaterialID:   1,
-		Weight:       500,
-		Lenght:       200,
-		Width:        300,
-		Height:       15,
-		Description:  "описание",
-		UserID:       1,
-		Active:       true,
+		ProductName:    "Менажница",
+		CategoryID:     105,
+		PiecesInPack:   1,
+		MaterialID:     1,
+		Weight:         500,
+		Lenght:         200,
+		Width:          300,
+		Height:         15,
+		Description:    "описание",
+		UserID:         1,
+		Active:         true,
+		WildberriesSKU: 24345325,
+		OzonSKU:        1242124,
 	}
 }
 
@@ -46,7 +48,18 @@ func TestCategory(t *testing.T) *Category {
 
 func TestMaterial(t *testing.T) *Material {
 	return &Material{
-		MaterialName: "Менажница Деревянная",
+		MaterialName: "Дерево",
 		Active:       true,
+	}
+}
+
+func TestMarketPlaceItem(t *testing.T) *MarketPlaceItem {
+	return &MarketPlaceItem{
+		ProductID:     1,
+		ItemName:      "Менажница Деревянная",
+		MarketPlaceID: 1,
+		SKU:           63572,
+		UserID:        1,
+		Active:        true,
 	}
 }

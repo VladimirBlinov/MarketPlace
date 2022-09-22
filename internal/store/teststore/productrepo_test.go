@@ -14,11 +14,14 @@ func TestProductRepo_Create(t *testing.T) {
 	p := model.TestProduct(t)
 
 	s.User().Create(u)
-
 	p.UserID = u.ID
 
-	assert.NoError(t, s.Product().Create(p))
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+
+	assert.NoError(t, s.Product().Create(p, mpiList))
 	assert.NotNil(t, p)
+	assert.NotNil(t, mpiList)
 }
 
 func TestProductRepo_FindByUserId(t *testing.T) {
@@ -29,10 +32,15 @@ func TestProductRepo_FindByUserId(t *testing.T) {
 	p1 := model.TestProduct(t)
 	p2 := model.TestProduct(t)
 
+	mpiList1 := &model.MarketPlaceItemsList{}
+	mpiList1.GetMPIList(p1)
 	p1.UserID = u.ID
-	s.Product().Create(p1)
+	s.Product().Create(p1, mpiList1)
+
+	mpiList2 := &model.MarketPlaceItemsList{}
 	p2.UserID = u.ID
-	s.Product().Create(p2)
+	mpiList2.GetMPIList(p2)
+	s.Product().Create(p2, mpiList2)
 
 	productsList, err := s.Product().FindByUserId(u.ID)
 
@@ -75,4 +83,12 @@ func TestProductRepo_GetMaterials(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(materials))
+}
+
+func TestProductRepo_CreateMarketPlaceItem(t *testing.T) {
+	s := teststore.New()
+	mpi := model.TestMarketPlaceItem(t)
+
+	assert.NoError(t, s.Product().CreateMarketPlaceItem(mpi))
+	assert.NotNil(t, mpi)
 }

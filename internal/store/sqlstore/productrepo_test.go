@@ -26,10 +26,14 @@ func TestProductRepo_Create(t *testing.T) {
 	p.UserID = u.ID
 	p.CategoryID = c.CategoryID
 	p.MaterialID = m.MaterialID
-	err := s.Product().Create(p)
+
+	mpi := &model.MarketPlaceItemsList{}
+	mpi.GetMPIList(p)
+	err := s.Product().Create(p, mpi)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
+	assert.NotNil(t, mpi)
 }
 
 func TestProductRepo_FindByUserId(t *testing.T) {
@@ -52,11 +56,15 @@ func TestProductRepo_FindByUserId(t *testing.T) {
 	p1.UserID = u.ID
 	p1.CategoryID = c.CategoryID
 	p1.MaterialID = m.MaterialID
-	s.Product().Create(p1)
+	mpi1 := &model.MarketPlaceItemsList{}
+	mpi1.GetMPIList(p1)
+	s.Product().Create(p1, mpi1)
 	p2.UserID = u.ID
 	p2.CategoryID = c.CategoryID
 	p2.MaterialID = m.MaterialID
-	s.Product().Create(p2)
+	mpi2 := &model.MarketPlaceItemsList{}
+	mpi2.GetMPIList(p2)
+	s.Product().Create(p2, mpi2)
 
 	productsList, err := s.Product().FindByUserId(u.ID)
 
@@ -173,4 +181,37 @@ func TestProductRepo_GetMaterials(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(materials))
+}
+
+func TestProductRepo_CreateMarketPlaceItem(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("product", "users", "category", "material", "marketplaceitem")
+
+	s := sqlstore.New(db)
+	u := model.TestAdminUser(t)
+	s.User().Create(u)
+
+	c := model.TestCategory(t)
+	s.Product().CreateCategory(c)
+
+	m := model.TestMaterial(t)
+	s.Product().CreateMaterial(m)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	p.CategoryID = c.CategoryID
+	p.MaterialID = m.MaterialID
+	p.ProductID = 1
+
+	mpi := model.TestMarketPlaceItem(t)
+	mpi.ProductID = p.ProductID
+	mpi.UserID = u.ID
+
+	err := s.Product().CreateMarketPlaceItem(mpi)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mpi)
+	assert.Equal(t, u.ID, mpi.UserID)
+	assert.Equal(t, p.ProductID, mpi.ProductID)
+	assert.Greater(t, mpi.MarketPlaceItemID, 0)
 }

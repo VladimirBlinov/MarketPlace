@@ -132,3 +132,30 @@ func Test_MaterialValidate(t *testing.T) {
 		})
 	}
 }
+
+func Test_MarketPlaceItemValidate(t *testing.T) {
+	testCases := []struct {
+		name    string
+		mpi     func() *model.MarketPlaceItem
+		isValid bool
+	}{
+		{
+			name: "valid",
+			mpi: func() *model.MarketPlaceItem {
+				mpi := model.TestMarketPlaceItem(t)
+				return mpi
+			},
+			isValid: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.isValid {
+				assert.NoError(t, tc.mpi().ValidateMarketPlaceItem())
+			} else {
+				assert.Error(t, tc.mpi().ValidateMarketPlaceItem())
+			}
+		})
+	}
+}

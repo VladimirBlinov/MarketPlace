@@ -11,12 +11,13 @@ type ProductRepo struct {
 	store *Store
 }
 
-func (r *ProductRepo) Create(p *model.Product) error {
-	if err := p.Validate(); err != nil {
+func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsList) error {
+	tx, err := r.store.db.Begin()
+	if err != nil {
 		return err
 	}
 
-	return r.store.db.QueryRow(
+	err = r.store.db.QueryRow(
 		"INSERT INTO public.product (product_name, category_id, pieces_in_pack, material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING product_id",
 		p.ProductName,
 		p.CategoryID,
@@ -30,6 +31,35 @@ func (r *ProductRepo) Create(p *model.Product) error {
 		p.UserID,
 		p.Active,
 	).Scan(&p.ProductID)
+
+	if err != nil {
+		err := tx.Rollback()
+		if err != nil {
+			return err
+		}
+		return err
+	}
+
+	for _, mpi := range mpiList.MPIList {
+		err := r.store.db.QueryRow(
+			"INSERT INTO public.marketplaceitem (product_id, marketplace_id, sku, user_id, active) VALUES ($1, $2, $3, $4, $5) RETURNING marketplaceitem_id",
+			p.ProductID,
+			mpi.MarketPlaceID,
+			mpi.SKU,
+			mpi.UserID,
+			mpi.Active,
+		).Scan(&mpi.MarketPlaceItemID)
+
+		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
@@ -171,6 +201,22 @@ func (r *ProductRepo) GetMaterials() ([]*model.Material, error) {
 		materials = append(materials, m)
 	}
 	return materials, nil
+}
+
+func (r *ProductRepo) CreateMarketPlaceItem(mpi *model.MarketPlaceItem) error {
+	if err := mpi.ValidateMarketPlaceItem(); err != nil {
+		return err
+	}
+	return r.store.db.QueryRow(
+		"INSERT INTO public.marketplaceitem (product_id, marketplace_id, sku, user_id, active) VALUES ($1, $2, $3, $4, $5) RETURNING marketplaceitem_id",
+		mpi.ProductID,
+		mpi.MarketPlaceID,
+		mpi.SKU,
+		mpi.UserID,
+		mpi.Active,
+	).Scan(&mpi.MarketPlaceItemID)
+
+	return nil
 }
 
 func NewNullInt(v int64) sql.NullInt64 {

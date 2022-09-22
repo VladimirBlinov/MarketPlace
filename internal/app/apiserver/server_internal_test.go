@@ -58,12 +58,12 @@ func TestServerHandleSignOut(t *testing.T) {
 
 func TestServer_HandleProductCreate(t *testing.T) {
 	store := teststore.New()
-	service := service.NewService(store)
+	srvc := service.NewService(store)
 	u := model.TestUser(t)
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *service)
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -94,6 +94,21 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			},
 			expectedCode: http.StatusCreated,
 		},
+		//{
+		//	name: "valid_empty_sku",
+		//	payload: map[string]string{
+		//		"product_name":    "product",
+		//		"category_id":     "105",
+		//		"material_id":     "1",
+		//		"wildberries_sku": "",
+		//		"ozon_sku":        "",
+		//	},
+		//	context: u,
+		//	coockieValue: map[interface{}]interface{}{
+		//		"user_id": u.ID,
+		//	},
+		//	expectedCode: http.StatusCreated,
+		//},
 
 		{
 			name: "valid_minimum_params",
@@ -113,7 +128,6 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			payload: map[string]string{
 				"product_name": "product",
 				"material_id":  "1",
-				//"category_id":  "0",
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -139,7 +153,7 @@ func TestServer_HandleProductCreate(t *testing.T) {
 
 func TestServer_HandleProductFindByUserId(t *testing.T) {
 	store := teststore.New()
-	service := service.NewService(store)
+	srvc := service.NewService(store)
 	u := model.TestUser(t)
 	store.User().Create(u)
 
@@ -152,7 +166,7 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	store.Product().Create(p2)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *service)
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -186,7 +200,7 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 
 func TestServer_HandleProductGetCategories(t *testing.T) {
 	store := teststore.New()
-	service := service.NewService(store)
+	srvc := service.NewService(store)
 	u := model.TestUser(t)
 	store.User().Create(u)
 
@@ -196,7 +210,7 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	store.Product().CreateCategory(c2)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *service)
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -230,7 +244,7 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 
 func TestServer_HandleProductGetMaterials(t *testing.T) {
 	store := teststore.New()
-	service := service.NewService(store)
+	srvc := service.NewService(store)
 	u := model.TestUser(t)
 	store.User().Create(u)
 
@@ -243,7 +257,7 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	store.Product().CreateMaterial(m1)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *service)
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -277,12 +291,12 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 
 func TestServer_AuthenticateUser(t *testing.T) {
 	userStore := teststore.New()
-	service := service.NewService(userStore)
+	srvc := service.NewService(userStore)
 	u := model.TestUser(t)
 	userStore.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	s := newServer(userStore, sessions.NewCookieStore(secretKey), *service)
+	s := newServer(userStore, sessions.NewCookieStore(secretKey), *srvc)
 	sc := securecookie.New(secretKey, nil)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -322,8 +336,8 @@ func TestServer_AuthenticateUser(t *testing.T) {
 
 func TestServer_HandleUsersCreate(t *testing.T) {
 	store := teststore.New()
-	service := service.NewService(store)
-	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *service)
+	srvc := service.NewService(store)
+	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc)
 	testCases := []struct {
 		name         string
 		payload      interface{}
@@ -366,10 +380,10 @@ func TestServer_HandleUsersCreate(t *testing.T) {
 func TestServer_HandleSessionsCreate(t *testing.T) {
 	u := model.TestUser(t)
 	store := teststore.New()
-	service := service.NewService(store)
+	srvc := service.NewService(store)
 	store.User().Create(u)
 
-	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *service)
+	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc)
 	testCases := []struct {
 		name         string
 		payload      interface{}

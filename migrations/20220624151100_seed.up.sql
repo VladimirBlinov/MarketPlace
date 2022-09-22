@@ -364,4 +364,5 @@ INSERT INTO public.users(
 
 INSERT INTO public.marketplace(
 	marketplace_id, marketplace_name, active)
-	VALUES (1, 'ozon', true);
+	VALUES (1, 'ozon', true),
+           (2, 'wildberries', true);

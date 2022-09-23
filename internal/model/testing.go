@@ -38,6 +38,22 @@ func TestProduct(t *testing.T) *Product {
 	}
 }
 
+func TestProductWOSKU(t *testing.T) *Product {
+	return &Product{
+		ProductName:  "Менажница",
+		CategoryID:   105,
+		PiecesInPack: 1,
+		MaterialID:   1,
+		Weight:       500,
+		Lenght:       200,
+		Width:        300,
+		Height:       15,
+		Description:  "описание",
+		UserID:       1,
+		Active:       true,
+	}
+}
+
 func TestCategory(t *testing.T) *Category {
 	return &Category{
 		CategoryName:     "Менажница Деревянная",

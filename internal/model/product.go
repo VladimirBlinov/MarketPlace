@@ -5,20 +5,20 @@ import (
 )
 
 type Product struct {
-	ProductID      int     `json:"product_id"`
+	ProductID      int     `json:"product_id,string"`
 	ProductName    string  `json:"product_name"`
-	CategoryID     int     `json:"category_id"`
-	PiecesInPack   int     `json:"pieces_in_pack"`
-	MaterialID     int     `json:"material_id"`
-	Weight         float32 `json:"weight"`
-	Lenght         float32 `json:"lenght"`
-	Width          float32 `json:"width"`
-	Height         float32 `json:"height"`
+	CategoryID     int     `json:"category_id,string"`
+	PiecesInPack   int     `json:"pieces_in_pack,string"`
+	MaterialID     int     `json:"material_id,string"`
+	Weight         float32 `json:"weight,string"`
+	Lenght         float32 `json:"lenght,string"`
+	Width          float32 `json:"width,string"`
+	Height         float32 `json:"height,string"`
 	Description    string  `json:"description"`
 	UserID         int     `json:"user_id"`
 	Active         bool    `json:"active"`
-	WildberriesSKU int     `json:"wildberries_sku"`
-	OzonSKU        int     `json:"ozon_sku"`
+	WildberriesSKU int     `json:"wildberries_sku,string"`
+	OzonSKU        int     `json:"ozon_sku,string"`
 }
 
 func (p *Product) Validate() error {

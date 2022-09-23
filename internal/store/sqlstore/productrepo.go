@@ -67,8 +67,8 @@ func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	var products []*model.Product
 	rows, err := r.store.db.Query(
 		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active"+
-			", (select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1) "+
-			", (select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2) "+
+			", coalesce((select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1), 0) "+
+			", coalesce((select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2), 0) "+
 			"FROM public.product as p WHERE active = true and user_id = $1",
 		userId,
 	)

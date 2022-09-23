@@ -85,7 +85,6 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"width":           "300",
 				"height":          "20",
 				"description":     "descript",
-				"user_id":         "1",
 				"wildberries_sku": "1234",
 				"ozon_sku":        "1234567",
 			},
@@ -117,7 +116,6 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"product_name": "product",
 				"category_id":  "105",
 				"material_id":  "1",
-				"user_id":      "1",
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -130,7 +128,6 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			payload: map[string]string{
 				"product_name": "product",
 				"material_id":  "1",
-				"user_id":      "1",
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -166,7 +163,7 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	mpi1.GetMPIList(p1)
 	store.Product().Create(p1, mpi1)
 
-	p2 := model.TestProduct(t)
+	p2 := model.TestProductWOSKU(t)
 	p2.UserID = u.ID
 	mpi2 := &model.MarketPlaceItemsList{}
 	mpi2.GetMPIList(p2)

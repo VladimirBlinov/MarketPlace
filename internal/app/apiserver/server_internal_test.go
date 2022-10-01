@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/VladimirBlinov/MarketPlace/internal/handler"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,12 +20,13 @@ import (
 
 func TestServerHandleSignOut(t *testing.T) {
 	store := teststore.New()
-	service := service.NewService(store)
+	services := service.NewService(store)
 	u := model.TestUser(t)
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *service)
+	handlers := handler.NewHandler(store, services, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *services, *handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -46,9 +48,9 @@ func TestServerHandleSignOut(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, "/private/signout", nil)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, tc.coockieValue, rec.Result().Header["Set-Cookie"])
@@ -63,7 +65,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -141,10 +144,10 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/private/product_create", b)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			req, _ := http.NewRequest(http.MethodPost, "/private/product/create", b)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
@@ -164,7 +167,8 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	store.Product().Create(p, mpiList)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -206,10 +210,10 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/private/product/%v", tc.productId), nil)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/private/product/product/%v", tc.productId), nil)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
@@ -237,7 +241,8 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	store.Product().Create(p2, mpi2)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -258,10 +263,10 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product_all", nil)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product/all", nil)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
@@ -281,7 +286,8 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	store.Product().CreateCategory(c2)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -302,10 +308,10 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product_category/get_categories", nil)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product/category/get_categories", nil)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
@@ -328,7 +334,8 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	store.Product().CreateMaterial(m1)
 
 	secretKey := []byte("secret_key")
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -349,10 +356,10 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product_material/get_materials", nil)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product/material/get_materials", nil)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
@@ -361,15 +368,16 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 }
 
 func TestServer_AuthenticateUser(t *testing.T) {
-	userStore := teststore.New()
-	srvc := service.NewService(userStore)
+	store := teststore.New()
+	srvc := service.NewService(store)
 	u := model.TestUser(t)
-	userStore.User().Create(u)
+	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	s := newServer(userStore, sessions.NewCookieStore(secretKey), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
 	sc := securecookie.New(secretKey, nil)
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handl := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -396,9 +404,9 @@ func TestServer_AuthenticateUser(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, "/", nil)
-			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
-			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
-			s.authenticateUser(handler).ServeHTTP(rec, req)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			s.handler.AuthenticateUser(handl).ServeHTTP(rec, req)
 
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
@@ -408,7 +416,8 @@ func TestServer_AuthenticateUser(t *testing.T) {
 func TestServer_HandleUsersCreate(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
-	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore([]byte("secret_key")))
+	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc, *handlers)
 	testCases := []struct {
 		name         string
 		payload      interface{}
@@ -454,7 +463,8 @@ func TestServer_HandleSessionsCreate(t *testing.T) {
 	srvc := service.NewService(store)
 	store.User().Create(u)
 
-	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc)
+	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore([]byte("secret_key")))
+	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc, *handlers)
 	testCases := []struct {
 		name         string
 		payload      interface{}

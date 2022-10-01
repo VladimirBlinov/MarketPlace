@@ -27,6 +27,31 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 	return nil
 }
 
+func (r *ProductRepo) GetProductById(productId int) (*model.Product, error) {
+	for _, product := range r.products {
+		if product.ProductID == productId {
+			for _, mpi := range r.marketPlaceItems {
+				GetProductIdMarketplaceItem(product, mpi)
+			}
+			return product, nil
+		}
+	}
+	return nil, store.ErrRecordNotFound
+}
+
+func GetProductIdMarketplaceItem(p *model.Product, mpi *model.MarketPlaceItem) {
+	if mpi.ProductID == p.ProductID {
+		switch mpi.MarketPlaceID {
+		case 1:
+			p.OzonSKU = mpi.SKU
+		case 2:
+			p.WildberriesSKU = mpi.SKU
+		default:
+			break
+		}
+	}
+}
+
 func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	productsList := make([]*model.Product, 0)
 	for _, product := range r.products {

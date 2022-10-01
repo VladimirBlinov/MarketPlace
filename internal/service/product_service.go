@@ -32,6 +32,15 @@ func (ps *ProductService) CreateProduct(p *model.Product) error {
 	return nil
 }
 
+func (ps *ProductService) GetProductById(id int) (*model.Product, error) {
+	product, err := ps.store.Product().GetProductById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
+}
+
 func (ps *ProductService) GetProductsByUserId(userId int) ([]*model.Product, error) {
 	products, err := ps.store.Product().FindByUserId(userId)
 	if err != nil {

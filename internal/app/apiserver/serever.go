@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"path"
+	"strconv"
 	"time"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
@@ -70,10 +72,12 @@ func (s *server) ConfigureRouter() {
 	private.Use(s.authenticateUser)
 	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
 	private.HandleFunc("/signout", s.handleSignOut()).Methods("GET")
+
 	private.HandleFunc("/product_create", s.handleProductCreate()).Methods("POST")
-	private.HandleFunc("/product_list", s.handleProductGetListByUserId()).Methods("GET")
+	private.HandleFunc("/product/{id}", s.handleProductGetProductById()).Methods("GET")
+	private.HandleFunc("/product_all", s.handleProductList()).Methods("GET")
 	private.HandleFunc("/product_category/get_categories", s.handleProductCategoryGetAll()).Methods("GET")
-	private.HandleFunc("/product_category/get_materials", s.handleProductGetMaterials()).Methods("GET")
+	private.HandleFunc("/product_material/get_materials", s.handleProductGetMaterials()).Methods("GET")
 
 }
 
@@ -90,6 +94,7 @@ func (s *server) logRequest(next http.Handler) http.Handler {
 		logger := s.logger.WithFields(logrus.Fields{
 			"remote_addr": r.RemoteAddr,
 			"request_id":  r.Context().Value(ctxKeyRequestID),
+			"url":         r.URL.Path,
 		})
 		logger.Infof("started %s %s", r.Method, r.RequestURI)
 
@@ -231,7 +236,25 @@ func (s *server) handleProductCreate() http.HandlerFunc {
 	}
 }
 
-func (s *server) handleProductGetListByUserId() http.HandlerFunc {
+func (s *server) handleProductGetProductById() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		productId, err := strconv.Atoi(path.Base(r.URL.Path))
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		product, err := s.service.ProductService.GetProductById(productId)
+		if err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusOK, product)
+	}
+}
+
+func (s *server) handleProductList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u := r.Context().Value(ctxKeyUser).(*model.User)
 

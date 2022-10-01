@@ -94,21 +94,21 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			},
 			expectedCode: http.StatusCreated,
 		},
-		//{
-		//	name: "valid_empty_sku",
-		//	payload: map[string]string{
-		//		"product_name":    "product",
-		//		"category_id":     "105",
-		//		"material_id":     "1",
-		//		"wildberries_sku": "",
-		//		"ozon_sku":        "",
-		//	},
-		//	context: u,
-		//	coockieValue: map[interface{}]interface{}{
-		//		"user_id": u.ID,
-		//	},
-		//	expectedCode: http.StatusCreated,
-		//},
+		{
+			name: "valid_empty_sku",
+			payload: map[string]string{
+				"product_name":    "product",
+				"category_id":     "105",
+				"material_id":     "1",
+				"wildberries_sku": "0",
+				"ozon_sku":        "0",
+			},
+			context: u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusCreated,
+		},
 
 		{
 			name: "valid_minimum_params",
@@ -151,6 +151,73 @@ func TestServer_HandleProductCreate(t *testing.T) {
 	}
 }
 
+func TestServer_HandleProductGetProduct(t *testing.T) {
+	store := teststore.New()
+	srvc := service.NewService(store)
+	u := model.TestUser(t)
+	store.User().Create(u)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+	store.Product().Create(p, mpiList)
+
+	secretKey := []byte("secret_key")
+	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc)
+	sc := securecookie.New(secretKey, nil)
+
+	testCases := []struct {
+		name         string
+		context      *model.User
+		productId    interface{}
+		coockieValue map[interface{}]interface{}
+		expectedCode int
+	}{
+		{
+			name:      "valid",
+			context:   u,
+			productId: p.ProductID,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:      "invalid req",
+			context:   u,
+			productId: "",
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:      "not found",
+			productId: p.ProductID + 1,
+			context:   u,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusUnprocessableEntity,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/private/product/%v", tc.productId), nil)
+			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
+			s.ServeHTTP(rec, req.WithContext(ctx))
+			assert.Equal(t, tc.expectedCode, rec.Code)
+			assert.NotEqual(t, 0, rec.Result().ContentLength)
+		})
+	}
+
+}
+
 func TestServer_HandleProductFindByUserId(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
@@ -191,7 +258,7 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product_list", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product_all", nil)
 			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)
@@ -282,7 +349,7 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product_category/get_materials", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product_material/get_materials", nil)
 			coockieStr, _ := sc.Encode(SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), ctxKeyUser, tc.context)

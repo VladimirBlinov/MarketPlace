@@ -36,9 +36,50 @@ func TestProductRepo_Create(t *testing.T) {
 	assert.NotNil(t, mpi)
 }
 
+func TestProductRepo_GetProductById(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("product", "users", "category", "marketplaceitem", "material")
+
+	s := sqlstore.New(db)
+	u := model.TestUser(t)
+	s.User().Create(u)
+
+	c := model.TestCategory(t)
+	s.Product().CreateCategory(c)
+
+	m := model.TestMaterial(t)
+	s.Product().CreateMaterial(m)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	p.CategoryID = c.CategoryID
+	p.MaterialID = m.MaterialID
+
+	mpi := &model.MarketPlaceItemsList{}
+	mpi.GetMPIList(p)
+	s.Product().Create(p, mpi)
+
+	p2 := model.TestProduct(t)
+	p2.UserID = u.ID
+	p2.CategoryID = c.CategoryID
+	p2.MaterialID = m.MaterialID
+	mpi2 := &model.MarketPlaceItemsList{}
+	s.Product().Create(p2, mpi2)
+
+	product, err := s.Product().GetProductById(p.ProductID)
+	product2, err2 := s.Product().GetProductById(p2.ProductID)
+
+	assert.Nil(t, err)
+	assert.Nil(t, err2)
+	assert.NotEqual(t, 0, product.WildberriesSKU)
+	assert.NotEqual(t, 0, product.OzonSKU)
+	assert.Equal(t, 0, product2.WildberriesSKU)
+	assert.Equal(t, 0, product2.OzonSKU)
+}
+
 func TestProductRepo_FindByUserId(t *testing.T) {
 	db, teardown := sqlstore.TestDB(t, databaseURL)
-	defer teardown("product", "users", "category", "marketplaceitem")
+	defer teardown("product", "users", "category", "marketplaceitem", "material")
 
 	s := sqlstore.New(db)
 	u := model.TestUser(t)

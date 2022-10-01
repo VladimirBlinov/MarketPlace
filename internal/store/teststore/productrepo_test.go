@@ -24,6 +24,24 @@ func TestProductRepo_Create(t *testing.T) {
 	assert.NotNil(t, mpiList)
 }
 
+func TestProduct_GetProductById(t *testing.T) {
+	s := teststore.New()
+	u := model.TestUser(t)
+	s.User().Create(u)
+
+	p := model.TestProduct(t)
+	mpiList1 := &model.MarketPlaceItemsList{}
+	mpiList1.GetMPIList(p)
+	p.UserID = u.ID
+	s.Product().Create(p, mpiList1)
+
+	product, err := s.Product().GetProductById(p.ProductID)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, product.OzonSKU)
+	assert.NotNil(t, product.WildberriesSKU)
+}
+
 func TestProductRepo_FindByUserId(t *testing.T) {
 	s := teststore.New()
 	u := model.TestUser(t)

@@ -49,7 +49,7 @@ func (h *Handler) AuthenticateUser(next http.Handler) http.Handler {
 			return
 		}
 
-		u, err := h.store.User().FindById(id.(int))
+		u, err := h.service.AuthService.Authenticate(id.(int))
 		if err != nil {
 			h.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
 			return

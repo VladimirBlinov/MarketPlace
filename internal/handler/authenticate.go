@@ -4,24 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/internal/service"
 	"net/http"
 )
 
 func (h *Handler) handleSignIn() http.HandlerFunc {
-	type request struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &request{}
+		req := &service.InputUser{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			h.error(w, r, http.StatusBadRequest, err)
 			return
 		}
 
-		u, err := h.store.User().FindByEmail(req.Email)
-		if err != nil || !u.ComparePassword(req.Password) {
+		u, err := h.service.AuthService.SignIn(req)
+		if err != nil {
 			h.error(w, r, http.StatusUnauthorized, errIncorrectEmailOrPassword)
 			return
 		}
@@ -43,33 +39,23 @@ func (h *Handler) handleSignIn() http.HandlerFunc {
 }
 
 func (h *Handler) handleRegister() http.HandlerFunc {
-	type request struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &request{}
+		req := &service.InputUser{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			h.error(w, r, http.StatusBadRequest, err)
 			return
 		}
 
-		u := &model.User{
-			Email:    req.Email,
-			Password: req.Password,
-			UserRole: 2,
-			Active:   true,
-		}
-		if err := h.store.User().Create(u); err != nil {
+		u, err := h.service.AuthService.Register(req)
+		if err != nil {
 			h.error(w, r, http.StatusUnprocessableEntity, err)
 			return
 		}
 
-		u.Sanitize()
 		h.respond(w, r, http.StatusCreated, u)
 	}
 }
+
 func (h *Handler) handleSignOut() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := h.sessionStore.Get(r, SessionName)

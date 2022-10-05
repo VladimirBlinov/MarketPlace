@@ -61,6 +61,7 @@ func (h *Handler) InitHandler() {
 	product := private.PathPrefix("/product").Subrouter()
 	product.HandleFunc("/create", h.handleProductCreate()).Methods("POST")
 	product.HandleFunc("/product/{id}", h.handleProductGetProductById()).Methods("GET")
+	product.HandleFunc("/update/{id}", h.handleProductGetProductById()).Methods("GET")
 	product.HandleFunc("/all", h.handleProductList()).Methods("GET")
 	product.HandleFunc("/category/get_categories", h.handleProductCategoryGetAll()).Methods("GET")
 	product.HandleFunc("/material/get_materials", h.handleProductGetMaterials()).Methods("GET")

@@ -413,7 +413,7 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	}
 }
 
-func TestServer_HandleUsersCreate(t *testing.T) {
+func TestServer_HandleRegister(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
 	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore([]byte("secret_key")))
@@ -457,7 +457,7 @@ func TestServer_HandleUsersCreate(t *testing.T) {
 	}
 }
 
-func TestServer_HandleSessionsCreate(t *testing.T) {
+func TestServer_HandleSignIn(t *testing.T) {
 	u := model.TestUser(t)
 	store := teststore.New()
 	srvc := service.NewService(store)

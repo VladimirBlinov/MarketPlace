@@ -25,8 +25,8 @@ func TestServerHandleSignOut(t *testing.T) {
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, services, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *services, *handlers)
+	handlers := handler.NewHandler(services, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -65,8 +65,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -167,8 +167,8 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	store.Product().Create(p, mpiList)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -241,8 +241,8 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	store.Product().Create(p2, mpi2)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -286,8 +286,8 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	store.Product().CreateCategory(c2)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -334,8 +334,8 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	store.Product().CreateMaterial(m1)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -374,8 +374,8 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	store.User().Create(u)
 
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(store, sessions.NewCookieStore(secretKey), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 	handl := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -416,8 +416,8 @@ func TestServer_AuthenticateUser(t *testing.T) {
 func TestServer_HandleRegister(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore([]byte("secret_key")))
-	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")))
+	s := newServer(*handlers)
 	testCases := []struct {
 		name         string
 		payload      interface{}
@@ -463,8 +463,8 @@ func TestServer_HandleSignIn(t *testing.T) {
 	srvc := service.NewService(store)
 	store.User().Create(u)
 
-	handlers := handler.NewHandler(store, srvc, sessions.NewCookieStore([]byte("secret_key")))
-	s := newServer(store, sessions.NewCookieStore([]byte("secret_key")), *srvc, *handlers)
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")))
+	s := newServer(*handlers)
 	testCases := []struct {
 		name         string
 		payload      interface{}

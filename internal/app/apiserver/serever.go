@@ -30,7 +30,7 @@ type server struct {
 	handler      handler.Handler
 }
 
-func newServer(store store.Store, sessionStore sessions.Store, service service.Service, handler handler.Handler) *server {
+func newServer(handler handler.Handler) *server {
 	s := &server{
 		logger:  logrus.New(),
 		handler: handler,

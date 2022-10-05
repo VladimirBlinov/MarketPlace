@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
-	"github.com/VladimirBlinov/MarketPlace/internal/store"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -28,15 +27,13 @@ type ctxKey int8
 type Handler struct {
 	service      *service.Service
 	sessionStore sessions.Store
-	store        store.Store
 	Router       *mux.Router
 	logger       *logrus.Logger
 }
 
-func NewHandler(store store.Store, service *service.Service, sessionStore sessions.Store) *Handler {
+func NewHandler(service *service.Service, sessionStore sessions.Store) *Handler {
 	return &Handler{
 		service:      service,
-		store:        store,
 		sessionStore: sessionStore,
 		Router:       mux.NewRouter(),
 		logger:       logrus.New(),

@@ -19,8 +19,8 @@ func Start(config *Config) error {
 	store := sqlstore.New(db)
 	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
 	services := service.NewService(store)
-	handlers := handler.NewHandler(store, services, sessionStore)
-	srv := newServer(store, sessionStore, *services, *handlers)
+	handlers := handler.NewHandler(services, sessionStore)
+	srv := newServer(*handlers)
 
 	return http.ListenAndServe(config.BindAddr, srv)
 }

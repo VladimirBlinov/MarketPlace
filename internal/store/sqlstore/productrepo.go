@@ -17,6 +17,7 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 		return err
 	}
 
+	p.Active = true
 	err = r.store.db.QueryRow(
 		"INSERT INTO public.product (product_name, category_id, pieces_in_pack, material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING product_id",
 		p.ProductName,
@@ -43,7 +44,9 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 	for _, mpi := range mpiList.MPIList {
 		mpi.ProductID = p.ProductID
 		err := r.store.db.QueryRow(
-			"INSERT INTO public.marketplaceitem (product_id, marketplace_id, sku, user_id, active) VALUES ($1, $2, $3, $4, $5) RETURNING marketplaceitem_id",
+			`INSERT INTO public.marketplaceitem 
+			(product_id, marketplace_id, sku, user_id, active) 
+			VALUES ($1, $2, $3, $4, $5) RETURNING marketplaceitem_id`,
 			mpi.ProductID,
 			mpi.MarketPlaceID,
 			mpi.SKU,
@@ -60,6 +63,75 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 		}
 	}
 
+	return tx.Commit()
+}
+
+func (r *ProductRepo) Update(p *model.Product, mpiList *model.MarketPlaceItemsList) error {
+	tx, err := r.store.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.store.db.Exec(
+		`UPDATE public.product 
+		SET product_name = $1,
+		category_id = $2,
+		pieces_in_pack = $3,
+		material_id = $4,
+		weight_gr = $5,
+		lenght_mm = $6, 
+		width_mm = $7, 
+		height_mm = $8, 
+		product_description = $9, 
+		user_id = $10, 
+		active = $11
+		WHERE product_id = $12`,
+		p.ProductName,
+		p.CategoryID,
+		p.PiecesInPack,
+		p.MaterialID,
+		p.Weight,
+		p.Lenght,
+		p.Weight,
+		p.Height,
+		p.Description,
+		p.UserID,
+		p.Active,
+		p.ProductID,
+	)
+
+	if err != nil {
+		err := tx.Rollback()
+		if err != nil {
+			return err
+		}
+		return err
+	}
+
+	for _, mpi := range mpiList.MPIList {
+		_, err := r.store.db.Exec(
+			`UPDATE public.marketplaceitem 
+				SET sku = $3, 
+					active = $5
+				WHERE product_id = $1
+				AND user_id = $4
+				AND marketplace_id = $2;
+    		`,
+			mpi.ProductID,
+			mpi.MarketPlaceID,
+			mpi.SKU,
+			mpi.UserID,
+			mpi.Active,
+		)
+
+		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
+			return err
+		}
+	}
 	return tx.Commit()
 }
 

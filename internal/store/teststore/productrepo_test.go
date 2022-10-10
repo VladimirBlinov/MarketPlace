@@ -24,6 +24,29 @@ func TestProductRepo_Create(t *testing.T) {
 	assert.NotNil(t, mpiList)
 }
 
+func TestProductRepo_Update(t *testing.T) {
+	s := teststore.New()
+	u := model.TestUser(t)
+	p := model.TestProduct(t)
+
+	s.User().Create(u)
+	p.UserID = u.ID
+
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+
+	s.Product().Create(p, mpiList)
+
+	p.Description = "new description"
+	p.OzonSKU = 1111111
+
+	mpiList.GetMPIList(p)
+
+	assert.NoError(t, s.Product().Update(p, mpiList))
+	assert.Equal(t, p.OzonSKU, s.ProductRepo.Products[p.ProductID].OzonSKU)
+	assert.Equal(t, p.Description, s.ProductRepo.Products[p.ProductID].Description)
+}
+
 func TestProduct_GetProductById(t *testing.T) {
 	s := teststore.New()
 	u := model.TestUser(t)

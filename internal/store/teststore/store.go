@@ -9,7 +9,7 @@ import (
 // Store
 type Store struct {
 	userRepo    *UserRepo
-	productRepo *ProductRepo
+	ProductRepo *ProductRepo
 }
 
 // Store constructor
@@ -30,16 +30,16 @@ func (s *Store) User() store.UserRepo {
 }
 
 func (s *Store) Product() store.ProductRepo {
-	if s.productRepo != nil {
-		return s.productRepo
+	if s.ProductRepo != nil {
+		return s.ProductRepo
 	}
 
-	s.productRepo = &ProductRepo{
+	s.ProductRepo = &ProductRepo{
 		store:            s,
-		products:         make(map[int]*model.Product),
+		Products:         make(map[int]*model.Product),
 		categories:       make(map[int]*model.Category),
 		materials:        make(map[int]*model.Material),
 		marketPlaceItems: make(map[int]*model.MarketPlaceItem),
 	}
-	return s.productRepo
+	return s.ProductRepo
 }

@@ -36,6 +36,47 @@ func TestProductRepo_Create(t *testing.T) {
 	assert.NotNil(t, mpi)
 }
 
+func TestProductRepo_Update(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("product", "users", "category", "material", "marketplaceitem")
+
+	s := sqlstore.New(db)
+	u := model.TestUser(t)
+	s.User().Create(u)
+
+	c := model.TestCategory(t)
+	s.Product().CreateCategory(c)
+
+	m := model.TestMaterial(t)
+	s.Product().CreateMaterial(m)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	p.CategoryID = c.CategoryID
+	p.MaterialID = m.MaterialID
+
+	mpi := &model.MarketPlaceItemsList{}
+	mpi.GetMPIList(p)
+	_ = s.Product().Create(p, mpi)
+
+	newOzon := 11111111
+	p.OzonSKU = newOzon
+
+	newDescription := "new description"
+	p.Description = newDescription
+
+	mpi1 := &model.MarketPlaceItemsList{}
+	mpi1.UpdateMPIList(p)
+
+	err := s.Product().Update(p, mpi1)
+	assert.NoError(t, err)
+
+	up, _ := s.Product().GetProductById(p.ProductID)
+
+	assert.Equal(t, newDescription, up.Description)
+	assert.Equal(t, newOzon, up.OzonSKU)
+}
+
 func TestProductRepo_GetProductById(t *testing.T) {
 	db, teardown := sqlstore.TestDB(t, databaseURL)
 	defer teardown("product", "users", "category", "marketplaceitem", "material")

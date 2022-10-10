@@ -8,15 +8,15 @@ import (
 
 type ProductRepo struct {
 	store            *Store
-	products         map[int]*model.Product
+	Products         map[int]*model.Product
 	categories       map[int]*model.Category
 	materials        map[int]*model.Material
 	marketPlaceItems map[int]*model.MarketPlaceItem
 }
 
 func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsList) error {
-	p.ProductID = len(r.products) + 1
-	r.products[p.ProductID] = p
+	p.ProductID = len(r.Products) + 1
+	r.Products[p.ProductID] = p
 
 	for _, mpi := range mpiList.MPIList {
 		mpi.ProductID = p.ProductID
@@ -27,8 +27,20 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 	return nil
 }
 
+func (r *ProductRepo) Update(p *model.Product, mpiList *model.MarketPlaceItemsList) error {
+	r.Products[p.ProductID] = p
+
+	for _, mpi := range mpiList.MPIList {
+		if mpi.ProductID == p.ProductID {
+			r.marketPlaceItems[mpi.MarketPlaceItemID] = mpi
+		}
+	}
+
+	return nil
+}
+
 func (r *ProductRepo) GetProductById(productId int) (*model.Product, error) {
-	for _, product := range r.products {
+	for _, product := range r.Products {
 		if product.ProductID == productId {
 			for _, mpi := range r.marketPlaceItems {
 				GetProductIdMarketplaceItem(product, mpi)
@@ -54,7 +66,7 @@ func GetProductIdMarketplaceItem(p *model.Product, mpi *model.MarketPlaceItem) {
 
 func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	productsList := make([]*model.Product, 0)
-	for _, product := range r.products {
+	for _, product := range r.Products {
 		if product.UserID == userId {
 			for _, mpi := range r.marketPlaceItems {
 				if mpi.ProductID == product.ProductID {

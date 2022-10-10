@@ -27,6 +27,32 @@ func (h *Handler) handleProductCreate() http.HandlerFunc {
 	}
 }
 
+func (h *Handler) handleProductUpdate() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqVars := mux.Vars(r)
+		productId, err := strconv.Atoi(reqVars["id"])
+		if err != nil {
+			h.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		req := &model.Product{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			h.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		req.UserID = r.Context().Value(CtxKeyUser).(*model.User).ID
+
+		if err := h.service.ProductService.UpdateProduct(productId, req); err != nil {
+			h.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		h.respond(w, r, http.StatusCreated, nil)
+	}
+}
+
 func (h *Handler) handleProductGetProductById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqVars := mux.Vars(r)

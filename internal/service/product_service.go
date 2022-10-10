@@ -67,3 +67,21 @@ func (ps *ProductService) GetProductMaterials() ([]*model.Material, error) {
 
 	return materials, nil
 }
+
+func (ps *ProductService) UpdateProduct(productId int, p *model.Product) error {
+	p.ProductID = productId
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.UpdateMPIList(p)
+
+	if err := p.Validate(); err != nil {
+		return err
+	}
+	if err := mpiList.ValidateMarketPlaceItems(); err != nil {
+		return err
+	}
+	if err := ps.store.Product().Update(p, mpiList); err != nil {
+		return err
+	}
+
+	return nil
+}

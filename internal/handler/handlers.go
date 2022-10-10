@@ -46,7 +46,8 @@ func (h *Handler) InitHandler() {
 	h.Router.Use(handlers.CORS(
 		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
 		handlers.ExposedHeaders([]string{"Set-Cookie"}),
-		handlers.AllowCredentials()))
+		handlers.AllowCredentials(),
+		handlers.AllowedMethods([]string{"GET", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"})))
 	h.Router.HandleFunc("/register", h.handleRegister()).Methods("POST")
 	h.Router.HandleFunc("/signin", h.handleSignIn()).Methods("POST")
 
@@ -58,7 +59,7 @@ func (h *Handler) InitHandler() {
 	product := private.PathPrefix("/product").Subrouter()
 	product.HandleFunc("/create", h.handleProductCreate()).Methods("POST")
 	product.HandleFunc("/product/{id}", h.handleProductGetProductById()).Methods("GET")
-	product.HandleFunc("/update/{id}", h.handleProductGetProductById()).Methods("GET")
+	product.HandleFunc("/update/{id}", h.handleProductUpdate()).Methods("POST")
 	product.HandleFunc("/all", h.handleProductList()).Methods("GET")
 	product.HandleFunc("/category/get_categories", h.handleProductCategoryGetAll()).Methods("GET")
 	product.HandleFunc("/material/get_materials", h.handleProductGetMaterials()).Methods("GET")

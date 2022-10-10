@@ -8,6 +8,7 @@ import (
 	"github.com/VladimirBlinov/MarketPlace/internal/handler"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
@@ -272,6 +273,102 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
+}
+
+func TestServer_HandleProductUpdate(t *testing.T) {
+	store := teststore.New()
+	srvc := service.NewService(store)
+	secretKey := []byte("secret_key")
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
+	sc := securecookie.New(secretKey, nil)
+
+	u := model.TestUser(t)
+	store.User().Create(u)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+	store.Product().Create(p, mpiList)
+
+	p1 := model.TestProduct(t)
+	p1.UserID = u.ID
+	p1.OzonSKU = 0
+	p1.WildberriesSKU = 0
+	mpiList1 := &model.MarketPlaceItemsList{}
+	mpiList1.GetMPIList(p1)
+	store.Product().Create(p, mpiList1)
+
+	p.Description = "new description"
+
+	testCases := []struct {
+		name         string
+		context      *model.User
+		payload      interface{}
+		coockieValue map[interface{}]interface{}
+		expectedCode int
+	}{
+		{
+			name:    "valid",
+			context: u,
+			payload: map[string]interface{}{
+				"product_id":      p.ProductID,
+				"product_name":    p.ProductName,
+				"category_id":     strconv.Itoa(p.CategoryID),
+				"pieces_in_pack":  strconv.Itoa(p.PiecesInPack),
+				"material_id":     strconv.Itoa(p.MaterialID),
+				"weight":          fmt.Sprintf("%f", p.Weight),
+				"lenght":          fmt.Sprintf("%f", p.Lenght),
+				"width":           fmt.Sprintf("%f", p.Width),
+				"height":          fmt.Sprintf("%f", p.Height),
+				"description":     p.Description,
+				"wildberries_sku": "2222222222",
+				"ozon_sku":        "1111111111",
+			},
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusCreated,
+		},
+		{
+			name:    "valid_empty_sku",
+			context: u,
+			payload: map[string]interface{}{
+				"product_id":      p1.ProductID,
+				"product_name":    p1.ProductName,
+				"category_id":     strconv.Itoa(p1.CategoryID),
+				"pieces_in_pack":  strconv.Itoa(p1.PiecesInPack),
+				"material_id":     strconv.Itoa(p1.MaterialID),
+				"weight":          fmt.Sprintf("%f", p1.Weight),
+				"lenght":          fmt.Sprintf("%f", p1.Lenght),
+				"width":           fmt.Sprintf("%f", p1.Width),
+				"height":          fmt.Sprintf("%f", p1.Height),
+				"description":     p1.Description,
+				"wildberries_sku": "2222222222",
+				"ozon_sku":        "1111111111",
+			},
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusCreated,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			b := &bytes.Buffer{}
+			json.NewEncoder(b).Encode(tc.payload)
+			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/private/product/update/%v", p.ProductID), b)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
+			s.ServeHTTP(rec, req.WithContext(ctx))
+			assert.Equal(t, tc.expectedCode, rec.Code)
+		})
+	}
+
 }
 
 func TestServer_HandleProductGetCategories(t *testing.T) {

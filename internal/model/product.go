@@ -5,7 +5,7 @@ import (
 )
 
 type Product struct {
-	ProductID      int     `json:"product_id,string"`
+	ProductID      int     `json:"product_id"`
 	ProductName    string  `json:"product_name"`
 	CategoryID     int     `json:"category_id,string"`
 	PiecesInPack   int     `json:"pieces_in_pack,string"`
@@ -56,27 +56,48 @@ type MarketPlaceItemsList struct {
 }
 
 func (mpil *MarketPlaceItemsList) GetMPIList(p *Product) {
-	if p.OzonSKU != 0 {
-		mpiOzon := &MarketPlaceItem{
-			ItemName: p.ProductName,
-			UserID:   p.UserID,
-			Active:   true,
-		}
-		mpiOzon.MarketPlaceID = 1
-		mpiOzon.SKU = p.OzonSKU
-		mpil.MPIList = append(mpil.MPIList, mpiOzon)
+	mpiOzon := &MarketPlaceItem{
+		ItemName:      p.ProductName,
+		UserID:        p.UserID,
+		Active:        true,
+		MarketPlaceID: 1,
+		SKU:           p.OzonSKU,
 	}
 
-	if p.WildberriesSKU != 0 {
-		mpiWb := &MarketPlaceItem{
-			ItemName: p.ProductName,
-			UserID:   p.UserID,
-			Active:   true,
-		}
-		mpiWb.MarketPlaceID = 2
-		mpiWb.SKU = p.WildberriesSKU
-		mpil.MPIList = append(mpil.MPIList, mpiWb)
+	mpil.MPIList = append(mpil.MPIList, mpiOzon)
+
+	mpiWb := &MarketPlaceItem{
+		ItemName:      p.ProductName,
+		UserID:        p.UserID,
+		Active:        true,
+		MarketPlaceID: 2,
+		SKU:           p.WildberriesSKU,
 	}
+
+	mpil.MPIList = append(mpil.MPIList, mpiWb)
+}
+
+func (mpil *MarketPlaceItemsList) UpdateMPIList(p *Product) {
+	mpiOzon := &MarketPlaceItem{
+		ProductID:     p.ProductID,
+		ItemName:      p.ProductName,
+		UserID:        p.UserID,
+		Active:        true,
+		MarketPlaceID: 1,
+		SKU:           p.OzonSKU,
+	}
+	mpil.MPIList = append(mpil.MPIList, mpiOzon)
+
+	mpiWb := &MarketPlaceItem{
+		ProductID:     p.ProductID,
+		ItemName:      p.ProductName,
+		UserID:        p.UserID,
+		Active:        true,
+		MarketPlaceID: 2,
+		SKU:           p.WildberriesSKU,
+	}
+
+	mpil.MPIList = append(mpil.MPIList, mpiWb)
 }
 
 func (mpi *MarketPlaceItemsList) ValidateMarketPlaceItems() error {

@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+func (h *Handler) handleProductOptions() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.respond(w, r, http.StatusOK, nil)
+	}
+}
+
 func (h *Handler) handleProductCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//req := &service.InputProduct{}
@@ -37,14 +43,14 @@ func (h *Handler) handleProductUpdate() func(http.ResponseWriter, *http.Request)
 		}
 
 		req := &model.Product{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		if err = json.NewDecoder(r.Body).Decode(req); err != nil {
 			h.error(w, r, http.StatusBadRequest, err)
 			return
 		}
 
 		req.UserID = r.Context().Value(CtxKeyUser).(*model.User).ID
 
-		if err := h.service.ProductService.UpdateProduct(productId, req); err != nil {
+		if err = h.service.ProductService.UpdateProduct(productId, req); err != nil {
 			h.error(w, r, http.StatusUnprocessableEntity, err)
 			return
 		}
@@ -53,7 +59,7 @@ func (h *Handler) handleProductUpdate() func(http.ResponseWriter, *http.Request)
 	}
 }
 
-func (h *Handler) handleProductGetProductById() http.HandlerFunc {
+func (h *Handler) handleProductGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqVars := mux.Vars(r)
 		productId, err := strconv.Atoi(reqVars["id"])
@@ -72,6 +78,26 @@ func (h *Handler) handleProductGetProductById() http.HandlerFunc {
 	}
 }
 
+func (h *Handler) handleProductDelete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqVars := mux.Vars(r)
+		productId, err := strconv.Atoi(reqVars["id"])
+		if err != nil {
+			h.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		u := r.Context().Value(CtxKeyUser).(*model.User)
+
+		if err = h.service.ProductService.DeleteProduct(productId, u.ID); err != nil {
+			h.error(w, r, http.StatusInternalServerError, nil)
+			return
+		}
+
+		h.respond(w, r, http.StatusOK, nil)
+	}
+}
+
 func (h *Handler) handleProductList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u := r.Context().Value(CtxKeyUser).(*model.User)
@@ -86,7 +112,7 @@ func (h *Handler) handleProductList() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) handleProductCategoryGetAll() http.HandlerFunc {
+func (h *Handler) handleProductCategoryGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := h.service.ProductService.GetProductCategories()
 		if err != nil {
@@ -98,7 +124,7 @@ func (h *Handler) handleProductCategoryGetAll() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) handleProductGetMaterials() http.HandlerFunc {
+func (h *Handler) handleProductMaterialGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		materials, err := h.service.ProductService.GetProductMaterials()
 		if err != nil {

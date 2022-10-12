@@ -66,6 +66,31 @@ func (r *ProductRepo) Create(p *model.Product, mpiList *model.MarketPlaceItemsLi
 	return tx.Commit()
 }
 
+func (r *ProductRepo) Delete(productId int, userId int) error {
+	tx, err := r.store.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	sqlQuery := `DELETE FROM public.marketplaceitem WHERE product_id = $1 and user_id = $2`
+	_, err = r.store.db.Exec(sqlQuery, productId, userId)
+	if err != nil {
+		if err = tx.Rollback(); err != nil {
+			return err
+		}
+	}
+
+	sqlQuery = `DELETE FROM public.product WHERE product_id = $1 and  user_id = $2`
+	_, err = r.store.db.Exec(sqlQuery, productId, userId)
+	if err != nil {
+		if err = tx.Rollback(); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (r *ProductRepo) Update(p *model.Product, mpiList *model.MarketPlaceItemsList) error {
 	tx, err := r.store.db.Begin()
 	if err != nil {
@@ -138,13 +163,13 @@ func (r *ProductRepo) Update(p *model.Product, mpiList *model.MarketPlaceItemsLi
 func (r *ProductRepo) GetProductById(productId int) (*model.Product, error) {
 	p := &model.Product{}
 	if err := r.store.db.QueryRow(
-		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm"+
-			", width_mm, height_mm, product_description, user_id, active"+
-			", coalesce((select mpi.sku from public.marketplaceitem as mpi "+
-			"WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1), 0)"+
-			", coalesce((select mpi.sku from public.marketplaceitem as mpi "+
-			"WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2), 0) "+
-			"FROM public.product as p WHERE active = true and product_id = $1",
+		`SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm,
+			width_mm, height_mm, product_description, user_id, active, 
+			coalesce((select mpi.sku from public.marketplaceitem as mpi
+			WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1), 0)
+			, coalesce((select mpi.sku from public.marketplaceitem as mpi
+			WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2), 0)
+			FROM public.product as p WHERE active = true and product_id = $1`,
 		productId,
 	).Scan(
 		&p.ProductID,
@@ -174,10 +199,10 @@ func (r *ProductRepo) GetProductById(productId int) (*model.Product, error) {
 func (r *ProductRepo) FindByUserId(userId int) ([]*model.Product, error) {
 	var products []*model.Product
 	rows, err := r.store.db.Query(
-		"SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active"+
-			", coalesce((select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1), 0) "+
-			", coalesce((select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2), 0) "+
-			"FROM public.product as p WHERE active = true and user_id = $1",
+		`SELECT product_id, product_name, category_id, pieces_in_pack ,material_id, weight_gr, lenght_mm, width_mm, height_mm, product_description, user_id, active
+			, coalesce((select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 1), 0)
+			, coalesce((select mpi.sku from public.marketplaceitem as mpi WHERE mpi.active = true and mpi.product_id = p.product_id and mpi.marketplace_id = 2), 0)
+			FROM public.product as p WHERE active = true and user_id = $1`,
 		userId,
 	)
 

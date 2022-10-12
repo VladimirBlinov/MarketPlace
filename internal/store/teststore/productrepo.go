@@ -51,6 +51,16 @@ func (r *ProductRepo) GetProductById(productId int) (*model.Product, error) {
 	return nil, store.ErrRecordNotFound
 }
 
+func (r *ProductRepo) Delete(productId int, userId int) error {
+	for _, product := range r.Products {
+		if product.UserID == userId && product.ProductID == productId {
+			delete(r.Products, product.ProductID)
+		}
+	}
+
+	return nil
+}
+
 func GetProductIdMarketplaceItem(p *model.Product, mpi *model.MarketPlaceItem) {
 	if mpi.ProductID == p.ProductID {
 		switch mpi.MarketPlaceID {

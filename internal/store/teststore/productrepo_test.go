@@ -1,6 +1,7 @@
 package teststore_test
 
 import (
+	store2 "github.com/VladimirBlinov/MarketPlace/internal/store"
 	"testing"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
@@ -45,6 +46,25 @@ func TestProductRepo_Update(t *testing.T) {
 	assert.NoError(t, s.Product().Update(p, mpiList))
 	assert.Equal(t, p.OzonSKU, s.ProductRepo.Products[p.ProductID].OzonSKU)
 	assert.Equal(t, p.Description, s.ProductRepo.Products[p.ProductID].Description)
+}
+
+func TestProductRepo_Delete(t *testing.T) {
+	s := teststore.New()
+	u := model.TestUser(t)
+	s.User().Create(u)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+	s.Product().Create(p, mpiList)
+
+	err := s.Product().Delete(p.ProductID, p.UserID)
+	assert.Nil(t, err)
+
+	product, err := s.Product().GetProductById(p.ProductID)
+	assert.Error(t, store2.ErrRecordNotFound, err)
+	assert.Nil(t, product)
 }
 
 func TestProduct_GetProductById(t *testing.T) {

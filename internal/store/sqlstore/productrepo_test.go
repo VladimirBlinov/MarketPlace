@@ -1,6 +1,7 @@
 package sqlstore_test
 
 import (
+	store2 "github.com/VladimirBlinov/MarketPlace/internal/store"
 	"testing"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
@@ -75,6 +76,37 @@ func TestProductRepo_Update(t *testing.T) {
 
 	assert.Equal(t, newDescription, up.Description)
 	assert.Equal(t, newOzon, up.OzonSKU)
+}
+
+func TestProductRepo_Delete(t *testing.T) {
+	db, teardown := sqlstore.TestDB(t, databaseURL)
+	defer teardown("product", "users", "category", "material", "marketplaceitem")
+
+	s := sqlstore.New(db)
+	u := model.TestUser(t)
+	s.User().Create(u)
+
+	c := model.TestCategory(t)
+	s.Product().CreateCategory(c)
+
+	m := model.TestMaterial(t)
+	s.Product().CreateMaterial(m)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	p.CategoryID = c.CategoryID
+	p.MaterialID = m.MaterialID
+
+	mpi := &model.MarketPlaceItemsList{}
+	mpi.GetMPIList(p)
+	_ = s.Product().Create(p, mpi)
+
+	err := s.Product().Delete(p.ProductID, u.ID)
+	assert.Nil(t, err)
+
+	product, err := s.Product().GetProductById(p.ProductID)
+	assert.Error(t, store2.ErrRecordNotFound, err)
+	assert.Nil(t, product)
 }
 
 func TestProductRepo_GetProductById(t *testing.T) {

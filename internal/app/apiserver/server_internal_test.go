@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/VladimirBlinov/MarketPlace/internal/handler"
+	store2 "github.com/VladimirBlinov/MarketPlace/internal/store"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -145,7 +146,7 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/private/product/create", b)
+			req, _ := http.NewRequest(http.MethodPost, "/private/product/product", b)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -220,7 +221,78 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
+}
 
+func TestServer_HandleDeleteProduct(t *testing.T) {
+	store := teststore.New()
+	srvc := service.NewService(store)
+	u := model.TestUser(t)
+	store.User().Create(u)
+
+	p := model.TestProduct(t)
+	p.UserID = u.ID
+	mpiList := &model.MarketPlaceItemsList{}
+	mpiList.GetMPIList(p)
+	store.Product().Create(p, mpiList)
+
+	secretKey := []byte("secret_key")
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	s := newServer(*handlers)
+	sc := securecookie.New(secretKey, nil)
+
+	testCases := []struct {
+		name         string
+		context      *model.User
+		productId    interface{}
+		coockieValue map[interface{}]interface{}
+		expectedCode int
+	}{
+		{
+			name:      "valid",
+			context:   u,
+			productId: p.ProductID,
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:      "invalid",
+			context:   u,
+			productId: "",
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:      "invalid_id",
+			context:   u,
+			productId: "a",
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf(`/private/product/product/%v`, tc.productId), nil)
+			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
+			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
+			s.ServeHTTP(rec, req.WithContext(ctx))
+			assert.Equal(t, tc.expectedCode, rec.Code)
+			pId, ok := tc.productId.(int)
+			if ok {
+				p1, err := store.Product().GetProductById(pId)
+				assert.Error(t, store2.ErrRecordNotFound, err)
+				assert.Nil(t, p1)
+			}
+		})
+	}
 }
 
 func TestServer_HandleProductFindByUserId(t *testing.T) {
@@ -264,7 +336,7 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product/all", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/private/product/product", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -360,7 +432,7 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/private/product/update/%v", p.ProductID), b)
+			req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/private/product/product/%v", p.ProductID), b)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)

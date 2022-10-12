@@ -85,3 +85,11 @@ func (ps *ProductService) UpdateProduct(productId int, p *model.Product) error {
 
 	return nil
 }
+
+func (ps *ProductService) DeleteProduct(productId int, userId int) error {
+	if err := ps.store.Product().Delete(productId, userId); err != nil {
+		return err
+	}
+
+	return nil
+}

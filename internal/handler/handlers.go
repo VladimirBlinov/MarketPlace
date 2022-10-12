@@ -41,13 +41,15 @@ func NewHandler(service *service.Service, sessionStore sessions.Store) *Handler 
 }
 
 func (h *Handler) InitHandler() {
-	h.Router.Use(h.setRequestID)
-	h.Router.Use(h.logRequest)
 	h.Router.Use(handlers.CORS(
-		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
 		handlers.ExposedHeaders([]string{"Set-Cookie"}),
 		handlers.AllowCredentials(),
-		handlers.AllowedMethods([]string{"GET", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"})))
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "content-type", "Origin", "Accept", "X-Requested-With"}),
+		handlers.AllowedMethods([]string{"OPTIONS", "DELETE", "GET", "HEAD", "POST", "PUT"}),
+		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
+	))
+	h.Router.Use(h.setRequestID)
+	h.Router.Use(h.logRequest)
 	h.Router.HandleFunc("/register", h.handleRegister()).Methods("POST")
 	h.Router.HandleFunc("/signin", h.handleSignIn()).Methods("POST")
 
@@ -57,12 +59,14 @@ func (h *Handler) InitHandler() {
 	private.HandleFunc("/signout", h.handleSignOut()).Methods("GET")
 
 	product := private.PathPrefix("/product").Subrouter()
-	product.HandleFunc("/create", h.handleProductCreate()).Methods("POST")
-	product.HandleFunc("/product/{id}", h.handleProductGetProductById()).Methods("GET")
-	product.HandleFunc("/update/{id}", h.handleProductUpdate()).Methods("POST")
-	product.HandleFunc("/all", h.handleProductList()).Methods("GET")
-	product.HandleFunc("/category/get_categories", h.handleProductCategoryGetAll()).Methods("GET")
-	product.HandleFunc("/material/get_materials", h.handleProductGetMaterials()).Methods("GET")
+	product.HandleFunc("/product", h.handleProductCreate()).Methods("POST")
+	product.HandleFunc("/product", h.handleProductList()).Methods("GET")
+	product.HandleFunc("/product/{id}", h.handleProductOptions()).Methods("OPTIONS")
+	product.HandleFunc("/product/{id}", h.handleProductGet()).Methods("GET")
+	product.HandleFunc("/product/{id}", h.handleProductUpdate()).Methods("PUT")
+	product.HandleFunc("/product/{id}", h.handleProductDelete()).Methods("DELETE")
+	product.HandleFunc("/category/get_categories", h.handleProductCategoryGet()).Methods("GET")
+	product.HandleFunc("/material/get_materials", h.handleProductMaterialGet()).Methods("GET")
 }
 
 func (h *Handler) error(w http.ResponseWriter, r *http.Request, code int, err error) {

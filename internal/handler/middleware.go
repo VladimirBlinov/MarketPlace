@@ -11,7 +11,7 @@ import (
 func (h *Handler) setRequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
-		w.Header().Set("X-Request-ID", id)
+		w.Header().Add("X-Request-ID", id)
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKeyRequestID, id)))
 	})
 }
@@ -22,6 +22,7 @@ func (h *Handler) logRequest(next http.Handler) http.Handler {
 			"remote_addr": r.RemoteAddr,
 			"request_id":  r.Context().Value(ctxKeyRequestID),
 			"url":         r.URL.Path,
+			"method":      r.Method,
 		})
 		logger.Infof("started %s %s", r.Method, r.RequestURI)
 

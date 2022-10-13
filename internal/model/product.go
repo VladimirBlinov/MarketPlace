@@ -7,29 +7,27 @@ import (
 type Product struct {
 	ProductID      int     `json:"product_id"`
 	ProductName    string  `json:"product_name"`
-	CategoryID     int     `json:"category_id,string"`
-	PiecesInPack   int     `json:"pieces_in_pack,string"`
-	MaterialID     int     `json:"material_id,string"`
-	Weight         float32 `json:"weight,string"`
-	Lenght         float32 `json:"lenght,string"`
-	Width          float32 `json:"width,string"`
-	Height         float32 `json:"height,string"`
+	CategoryID     int     `json:"category_id"`
+	PiecesInPack   int     `json:"pieces_in_pack"`
+	MaterialID     int     `json:"material_id"`
+	Weight         float32 `json:"weight"`
+	Lenght         float32 `json:"lenght"`
+	Width          float32 `json:"width"`
+	Height         float32 `json:"height"`
 	Description    string  `json:"description"`
 	UserID         int     `json:"user_id"`
-	Active         bool    `json:"active"`
-	WildberriesSKU int     `json:"wildberries_sku,string"`
-	OzonSKU        int     `json:"ozon_sku,string"`
+	Active         bool    `json:"-"`
+	WildberriesSKU int     `json:"wildberries_sku"`
+	OzonSKU        int     `json:"ozon_sku"`
 }
 
 func (p *Product) Validate() error {
 	return validation.ValidateStruct(
 		p,
 		validation.Field(&p.ProductName, validation.Required, validation.Length(1, 200)),
-		validation.Field(&p.CategoryID, validation.Required),
 		validation.Field(&p.CategoryID, validation.Required, validation.By(checkCategoryID(1))),
 		validation.Field(&p.MaterialID, validation.Required),
 		validation.Field(&p.UserID, validation.Required),
-		// validation.Field(&p.Active, validation.Required),
 	)
 }
 

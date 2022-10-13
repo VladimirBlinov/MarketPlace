@@ -1,28 +1,50 @@
 package apiserver
 
 import (
+	"context"
 	"database/sql"
 	"github.com/VladimirBlinov/MarketPlace/internal/handler"
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
 	"github.com/VladimirBlinov/MarketPlace/internal/store/sqlstore"
 	"github.com/gorilla/sessions"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
-func Start(config *Config) error {
+type ApiServer struct {
+	httpServer *http.Server
+}
+
+func (s *ApiServer) Start(config *Config) error {
 	db, err := newDB(config.DataBaseURL)
 	if err != nil {
 		return err
 	}
 
-	defer db.Close()
+	defer func(db *sql.DB) {
+		if err = db.Close(); err != nil {
+			logrus.Errorf("error db close: %s", err.Error())
+		}
+	}(db)
+
 	store := sqlstore.New(db)
 	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
 	services := service.NewService(store)
 	handlers := handler.NewHandler(services, sessionStore)
-	srv := newServer(*handlers)
+	handlers.InitHandler()
+	//srv := newServer(*handlers)
 
-	return http.ListenAndServe(config.BindAddr, srv)
+	s.httpServer = &http.Server{
+		Addr:           config.BindAddr,
+		Handler:        handlers.Router,
+		MaxHeaderBytes: 1 << 20, // 1 MB
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+	}
+
+	//return http.ListenAndServe(config.BindAddr, srv)
+	return s.httpServer.ListenAndServe()
 }
 
 func newDB(databaseURL string) (*sql.DB, error) {
@@ -31,9 +53,12 @@ func newDB(databaseURL string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		return nil, err
 	}
-
 	return db, nil
+}
+
+func (s *ApiServer) ShutDown(ctx context.Context) error {
+	return s.httpServer.Shutdown(ctx)
 }

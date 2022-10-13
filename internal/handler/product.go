@@ -18,11 +18,12 @@ func (h *Handler) handleProductCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//req := &service.InputProduct{}
 		req := &model.Product{}
-		req.UserID = r.Context().Value(CtxKeyUser).(*model.User).ID
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			h.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+
+		req.UserID = r.Context().Value(CtxKeyUser).(*model.User).ID
 
 		if err := h.service.ProductService.CreateProduct(req); err != nil {
 			h.error(w, r, http.StatusUnprocessableEntity, err)
@@ -47,7 +48,7 @@ func (h *Handler) handleProductUpdate() func(http.ResponseWriter, *http.Request)
 			h.error(w, r, http.StatusBadRequest, err)
 			return
 		}
-
+		req.Active = true
 		req.UserID = r.Context().Value(CtxKeyUser).(*model.User).ID
 
 		if err = h.service.ProductService.UpdateProduct(productId, req); err != nil {

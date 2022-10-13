@@ -21,8 +21,9 @@ func (h *Handler) logRequest(next http.Handler) http.Handler {
 		logger := h.logger.WithFields(logrus.Fields{
 			"remote_addr": r.RemoteAddr,
 			"request_id":  r.Context().Value(ctxKeyRequestID),
-			"url":         r.URL.Path,
 			"method":      r.Method,
+			"user_id":     r.Context().Value(CtxKeyUser),
+			"url":         r.URL.Path,
 		})
 		logger.Infof("started %s %s", r.Method, r.RequestURI)
 

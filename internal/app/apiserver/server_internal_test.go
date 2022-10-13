@@ -9,7 +9,6 @@ import (
 	store2 "github.com/VladimirBlinov/MarketPlace/internal/store"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
@@ -28,7 +27,8 @@ func TestServerHandleSignOut(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(services, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -53,7 +53,8 @@ func TestServerHandleSignOut(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, tc.coockieValue, rec.Result().Header["Set-Cookie"])
 		})
@@ -68,7 +69,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -80,18 +82,18 @@ func TestServer_HandleProductCreate(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			payload: map[string]string{
+			payload: map[string]interface{}{
 				"product_name":    "product",
-				"category_id":     "105",
-				"pieces_in_pack":  "1",
-				"material_id":     "1",
-				"weight":          "500",
-				"lenght":          "500",
-				"width":           "300",
-				"height":          "20",
+				"category_id":     105,
+				"pieces_in_pack":  1,
+				"material_id":     1,
+				"weight":          500,
+				"lenght":          500,
+				"width":           300,
+				"height":          20,
 				"description":     "descript",
-				"wildberries_sku": "1234",
-				"ozon_sku":        "1234567",
+				"wildberries_sku": 1234,
+				"ozon_sku":        1234567,
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -101,12 +103,12 @@ func TestServer_HandleProductCreate(t *testing.T) {
 		},
 		{
 			name: "valid_empty_sku",
-			payload: map[string]string{
+			payload: map[string]interface{}{
 				"product_name":    "product",
-				"category_id":     "105",
-				"material_id":     "1",
-				"wildberries_sku": "0",
-				"ozon_sku":        "0",
+				"category_id":     105,
+				"material_id":     1,
+				"wildberries_sku": 0,
+				"ozon_sku":        0,
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -117,10 +119,10 @@ func TestServer_HandleProductCreate(t *testing.T) {
 
 		{
 			name: "valid_minimum_params",
-			payload: map[string]string{
+			payload: map[string]interface{}{
 				"product_name": "product",
-				"category_id":  "105",
-				"material_id":  "1",
+				"category_id":  105,
+				"material_id":  1,
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -130,9 +132,9 @@ func TestServer_HandleProductCreate(t *testing.T) {
 		},
 		{
 			name: "invalid_less_params",
-			payload: map[string]string{
+			payload: map[string]interface{}{
 				"product_name": "product",
-				"material_id":  "1",
+				"material_id":  1,
 			},
 			context: u,
 			coockieValue: map[interface{}]interface{}{
@@ -150,7 +152,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
@@ -170,7 +173,8 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -216,7 +220,8 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
@@ -237,7 +242,8 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -283,7 +289,8 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			pId, ok := tc.productId.(int)
 			if ok {
@@ -315,7 +322,8 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -340,7 +348,8 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
@@ -352,7 +361,8 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 	srvc := service.NewService(store)
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	u := model.TestUser(t)
@@ -387,16 +397,16 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			payload: map[string]interface{}{
 				"product_id":      p.ProductID,
 				"product_name":    p.ProductName,
-				"category_id":     strconv.Itoa(p.CategoryID),
-				"pieces_in_pack":  strconv.Itoa(p.PiecesInPack),
-				"material_id":     strconv.Itoa(p.MaterialID),
-				"weight":          fmt.Sprintf("%f", p.Weight),
-				"lenght":          fmt.Sprintf("%f", p.Lenght),
-				"width":           fmt.Sprintf("%f", p.Width),
-				"height":          fmt.Sprintf("%f", p.Height),
+				"category_id":     p.CategoryID,
+				"pieces_in_pack":  p.PiecesInPack,
+				"material_id":     p.MaterialID,
+				"weight":          p.Weight,
+				"lenght":          p.Lenght,
+				"width":           p.Width,
+				"height":          p.Height,
 				"description":     p.Description,
-				"wildberries_sku": "2222222222",
-				"ozon_sku":        "1111111111",
+				"wildberries_sku": 2222222222,
+				"ozon_sku":        1111111111,
 			},
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
@@ -409,16 +419,16 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			payload: map[string]interface{}{
 				"product_id":      p1.ProductID,
 				"product_name":    p1.ProductName,
-				"category_id":     strconv.Itoa(p1.CategoryID),
-				"pieces_in_pack":  strconv.Itoa(p1.PiecesInPack),
-				"material_id":     strconv.Itoa(p1.MaterialID),
-				"weight":          fmt.Sprintf("%f", p1.Weight),
-				"lenght":          fmt.Sprintf("%f", p1.Lenght),
-				"width":           fmt.Sprintf("%f", p1.Width),
-				"height":          fmt.Sprintf("%f", p1.Height),
+				"category_id":     p1.CategoryID,
+				"pieces_in_pack":  p1.PiecesInPack,
+				"material_id":     p1.MaterialID,
+				"weight":          p1.Weight,
+				"lenght":          p1.Lenght,
+				"width":           p1.Width,
+				"height":          p1.Height,
 				"description":     p1.Description,
-				"wildberries_sku": "2222222222",
-				"ozon_sku":        "1111111111",
+				"wildberries_sku": 2222222222,
+				"ozon_sku":        1111111111,
 			},
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
@@ -436,7 +446,8 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
@@ -456,7 +467,8 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -481,7 +493,8 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
@@ -504,7 +517,8 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
@@ -529,7 +543,8 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
-			s.ServeHTTP(rec, req.WithContext(ctx))
+			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
+			//s.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
@@ -544,7 +559,8 @@ func TestServer_AuthenticateUser(t *testing.T) {
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 	handl := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -575,7 +591,7 @@ func TestServer_AuthenticateUser(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
-			s.handler.AuthenticateUser(handl).ServeHTTP(rec, req)
+			handlers.AuthenticateUser(handl).ServeHTTP(rec, req)
 
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
@@ -586,7 +602,8 @@ func TestServer_HandleRegister(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	testCases := []struct {
 		name         string
 		payload      interface{}
@@ -620,7 +637,7 @@ func TestServer_HandleRegister(t *testing.T) {
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
 			req, _ := http.NewRequest(http.MethodPost, "/register", b)
-			s.ServeHTTP(rec, req)
+			handlers.Router.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
@@ -633,7 +650,8 @@ func TestServer_HandleSignIn(t *testing.T) {
 	store.User().Create(u)
 
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")))
-	s := newServer(*handlers)
+	handlers.InitHandler()
+	//s := newServer(*handlers)
 	testCases := []struct {
 		name         string
 		payload      interface{}
@@ -677,7 +695,8 @@ func TestServer_HandleSignIn(t *testing.T) {
 			json.NewEncoder(b).Encode(tc.payload)
 			req, _ := http.NewRequest(http.MethodPost, "/signin", b)
 			req.Header.Set("Origin", "http://localhost:3000")
-			s.ServeHTTP(rec, req)
+			handlers.Router.ServeHTTP(rec, req)
+			//s.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}

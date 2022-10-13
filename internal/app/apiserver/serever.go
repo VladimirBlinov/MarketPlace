@@ -1,46 +1,21 @@
 package apiserver
 
-import (
-	"github.com/VladimirBlinov/MarketPlace/internal/handler"
-	"github.com/VladimirBlinov/MarketPlace/internal/service"
-	"github.com/VladimirBlinov/MarketPlace/internal/store"
-	"github.com/gorilla/sessions"
-	"github.com/sirupsen/logrus"
-	"net/http"
-)
-
-//const (
-//	SessionName            = "MarketPlace"
-//	ctxKeyUser      ctxKey = iota
-//	ctxKeyRequestID ctxKey = iota
-//)
+//type server struct {
+//	logger  *logrus.Logger
+//	handler handler.Handler
+//}
 //
-//var (
-//	errIncorectEmailOrPassword = errors.New("Incorrect email or password")
-//	errNotAuthenticated        = errors.New("Not authenticated")
-//)
+//func newServer(handler handler.Handler) *server {
+//	s := &server{
+//		logger:  logrus.New(),
+//		handler: handler,
+//	}
 //
-//type ctxKey int8
-
-type server struct {
-	logger       *logrus.Logger
-	store        store.Store
-	sessionStore sessions.Store
-	service      service.Service
-	handler      handler.Handler
-}
-
-func newServer(handler handler.Handler) *server {
-	s := &server{
-		logger:  logrus.New(),
-		handler: handler,
-	}
-
-	s.handler.InitHandler()
-
-	return s
-}
-
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.handler.Router.ServeHTTP(w, r)
-}
+//	s.handler.InitHandler()
+//
+//	return s
+//}
+//
+//func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//	s.handler.Router.ServeHTTP(w, r)
+//}

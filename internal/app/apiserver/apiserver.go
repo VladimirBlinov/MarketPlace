@@ -3,13 +3,14 @@ package apiserver
 import (
 	"context"
 	"database/sql"
+	"net/http"
+	"time"
+
 	"github.com/VladimirBlinov/MarketPlace/internal/handler"
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
 	"github.com/VladimirBlinov/MarketPlace/internal/store/sqlstore"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"time"
 )
 
 type ApiServer struct {
@@ -33,7 +34,6 @@ func (s *ApiServer) Start(config *Config) error {
 	services := service.NewService(store)
 	handlers := handler.NewHandler(services, sessionStore)
 	handlers.InitHandler()
-	//srv := newServer(*handlers)
 
 	s.httpServer = &http.Server{
 		Addr:           config.BindAddr,
@@ -43,7 +43,6 @@ func (s *ApiServer) Start(config *Config) error {
 		WriteTimeout:   10 * time.Second,
 	}
 
-	//return http.ListenAndServe(config.BindAddr, srv)
 	return s.httpServer.ListenAndServe()
 }
 

@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/VladimirBlinov/MarketPlace/internal/handler"
-	store2 "github.com/VladimirBlinov/MarketPlace/internal/store"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/VladimirBlinov/MarketPlace/internal/handler"
+	store2 "github.com/VladimirBlinov/MarketPlace/internal/store"
 
 	"github.com/VladimirBlinov/MarketPlace/internal/model"
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
@@ -174,7 +175,6 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
 	handlers.InitHandler()
-	//s := newServer(*handlers)
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {

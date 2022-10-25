@@ -1,11 +1,11 @@
 package teststore_test
 
 import (
-	store2 "github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store"
+	store2 "github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
 	"testing"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/model"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store/teststore"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store/teststore"
 	"github.com/stretchr/testify/assert"
 )
 

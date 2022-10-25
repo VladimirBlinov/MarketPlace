@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/handler"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/service"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store/sqlstore"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/handler"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store/sqlstore"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
 )

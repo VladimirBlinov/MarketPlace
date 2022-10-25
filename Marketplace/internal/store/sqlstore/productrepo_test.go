@@ -1,11 +1,11 @@
 package sqlstore_test
 
 import (
-	store2 "github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store"
+	store2 "github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
 	"testing"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/model"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store/sqlstore"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store/sqlstore"
 	"github.com/stretchr/testify/assert"
 )
 

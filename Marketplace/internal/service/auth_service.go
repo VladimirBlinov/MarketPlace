@@ -3,8 +3,8 @@ package service
 import (
 	"errors"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/model"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
 )
 
 type InputUser struct {

@@ -3,8 +3,8 @@ package teststore
 import (
 	"errors"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/model"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
 )
 
 type ProductRepo struct {
@@ -44,7 +44,7 @@ func (r *ProductRepo) GetProductById(productId int) (*model.Product, error) {
 	for _, product := range r.Products {
 		if product.ProductID == productId {
 			for _, mpi := range r.marketPlaceItems {
-				GetProductIdMarketplaceItem(product, mpi)
+				GetProductIdMarketPlaceItem(product, mpi)
 			}
 			return product, nil
 		}
@@ -62,7 +62,7 @@ func (r *ProductRepo) Delete(productId int, userId int) error {
 	return nil
 }
 
-func GetProductIdMarketplaceItem(p *model.Product, mpi *model.MarketPlaceItem) {
+func GetProductIdMarketPlaceItem(p *model.Product, mpi *model.MarketPlaceItem) {
 	if mpi.ProductID == p.ProductID {
 		switch mpi.MarketPlaceID {
 		case 1:

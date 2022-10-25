@@ -1,6 +1,6 @@
 package service
 
-import "github.com/VladimirBlinov/MarketPlace/Marketplace/internal/store"
+import "github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
 
 type Service struct {
 	ProductService *ProductService

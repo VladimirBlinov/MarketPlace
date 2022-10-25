@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/model"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/service"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
 )
 
 func (h *Handler) handleSignIn() http.HandlerFunc {

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/service"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"

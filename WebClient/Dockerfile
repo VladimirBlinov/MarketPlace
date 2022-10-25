@@ -20,22 +20,3 @@ EXPOSE 3000
 
 CMD ["yarn", "start"]
 
-# # Build
-# RUN yarn build
-
-# # ### RUNNER ###
-# FROM base
-# WORKDIR /app
-# COPY package.json ./
-# RUN yarn install --ignore-engines
-
-# # Copy runtime dependencies
-# COPY --from=builder /app/build ./build
-# COPY public/ ./public/
-# COPY node_modules/ ./node_modules/
-# COPY src/ ./src/
-
-# EXPOSE 3000
-
-# CMD ["yarn", "start"]
-

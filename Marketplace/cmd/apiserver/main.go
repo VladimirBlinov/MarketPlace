@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/BurntSushi/toml"
-	"github.com/VladimirBlinov/MarketPlace/Marketplace/internal/app/apiserver"
+	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/app/apiserver"
 )
 
 var configPath string

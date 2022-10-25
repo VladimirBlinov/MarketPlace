@@ -1,4 +1,4 @@
-module github.com/VladimirBlinov/MarketPlace/Marketplace
+module github.com/VladimirBlinov/MarketPlace/MarketPlace
 
 go 1.18
 

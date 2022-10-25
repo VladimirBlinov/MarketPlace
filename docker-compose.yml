@@ -48,7 +48,7 @@ services:
 
   client:
     build:
-      context: ./MarketPlaceClient/client
+      context: ./WebClient
       dockerfile: Dockerfile
     depends_on:
       - apiserver

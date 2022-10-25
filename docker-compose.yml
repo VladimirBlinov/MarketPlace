@@ -1,0 +1,100 @@
+version: '3'
+services:
+  postgresdb:
+    build:
+      context: ./MarketPlaceDB
+      dockerfile: Dockerfile
+    env_file:
+      - ./MarketPlaceDB/.env
+    volumes:
+      - ./MarketPlaceDB/db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "MarketPlace"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    
+    
+  migrate_test:
+    image: migrate/migrate
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    volumes:
+        - ./MarketPlaceDB/migrations:/migrations
+    command: ["-database",  "postgres://admin:qaz@postgresdb:5432/MarketPlaceTest?sslmode=disable", "-path", "/migrations", "up"]
+    
+  migrate_prod:
+    image: migrate/migrate
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    volumes:
+        - ./MarketPlaceDB/migrations:/migrations
+    command: ["-database",  "postgres://admin:qaz@postgresdb:5432/MarketPlace?sslmode=disable", "-path", "/migrations", "up"]
+
+  apiserver:
+    build:
+      context: ./MarketPlace
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/usr/src/app
+    depends_on:
+      - migrate_prod
+    ports:
+      - "8080:8080"
+
+  client:
+    build:
+      context: ./MarketPlaceClient/client
+      dockerfile: Dockerfile
+    depends_on:
+      - apiserver
+    ports:
+      - "3000:3000"
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - apiserver
+      - client
+    ports:
+      - "80:80"
+
+#   nginx-front:
+#     image: nginx:1.17.8
+#     volumes:
+#     - ./code-front:/code
+#     - ./docker/nginx-front.conf:/etc/nginx/conf.d/nginx-front.conf
+#     networks:
+#       net:
+#         ipv4_address: 192.168.240.2
+#   nginx-back:
+#     image: nginx:1.17.8
+#     volumes:
+#     - ./code-back:/code
+#     - ./docker/nginx-back.conf:/etc/nginx/conf.d/nginx-back.conf
+#     networks:
+#       net:
+#         ipv4_address: 192.168.240.3
+#   php-back:
+#     image: php:7.4-fpm
+#     volumes:
+#       - ./code-back:/code
+#     networks:
+#       net:
+#         ipv4_address: 192.168.240.4
+
+# networks:
+#   net:
+#     driver: bridge
+#     ipam:
+#       config:
+#         - subnet: 192.168.240.0/24
+
+volumes:
+  db_data:

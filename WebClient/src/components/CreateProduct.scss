@@ -1,0 +1,72 @@
+section.form-product {
+    margin: auto;
+    height: auto;
+    width: auto;
+    max-width: 500px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 1rem;
+    background-color: rgb(228, 228, 228);
+    align-items: center;
+    // top: 50%;
+    // left: 50%;
+    // transform: translate(-50%, -50%);
+    // position: absolute;
+    
+}
+
+select.category_id,
+select.material_id {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid white;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    font-size: 14px;
+  }
+  
+  label.form-product-label {
+    text-shadow: 1px 1px #ffffff;
+    line-height: 2;
+    text-align: left;
+    display: block;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    color: rgb(100, 100, 100);
+    font-size: 14px;
+    font-weight: 200;
+  }
+
+.form-product-plug {
+    height: 100%;
+    position: relative;
+    align-items: center;
+    padding-top: 30px;
+}
+
+option.main-category
+{
+  font-weight: bold;
+}
+
+button[type='submit'].submit-create-product,
+  input[type='submit'].submit-create-product {
+    background: rgb(50, 150, 255);
+    color: white;
+    text-transform: uppercase;
+    border: none;
+    margin-top: 40px;
+    padding: 20px;
+    font-size: 16px;
+    font-weight: 100;
+    letter-spacing: 10px;
+  }
+
+  button[type='submit'].submit-create-product:hover,
+  input[type='submit'].submit-create-product:hover {
+    background: #ff9900;
+  }

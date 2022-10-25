@@ -1,3 +1,5 @@
-configs/apiserver.toml
-.vscode/
-.idea/
+Marketplace/configs/apiserver.toml
+Marketplace/.vscode/
+Marketplace/.idea/
+MarketPlaceDB/.env
+MarketPlaceDB/db-data/

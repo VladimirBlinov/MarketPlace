@@ -1,0 +1,45 @@
+table.product-list-table {
+    width: auto;
+    min-width: 500px;
+    text-align: left;
+    align-items: center;
+    // top: 50%;
+    // left: 50%;
+    // transform: translate(-50%, 0);
+    // position: absolute;
+}
+
+tr.products:nth-child(even) {
+    background: rgb(231, 231, 231);
+}
+
+td {
+    padding: 2px;
+}
+
+td.product-first {
+    padding: 0px;
+    background: white;
+    width: auto;
+}
+
+.product-list {
+    height: 100%;
+    position: relative;
+    align-items: center;
+    //padding: 10px;
+}
+
+.product-list-page {
+    padding: 10px;
+}
+
+button.create-product {
+    width: 100px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+button.edit-product {
+    width: 100px;
+}

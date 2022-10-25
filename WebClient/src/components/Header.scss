@@ -1,0 +1,28 @@
+.page-header {
+    height: 6rem;
+    display: flex;
+    align-items: center;
+    background: rgb(50, 150, 255);
+    color: white;
+    padding: 0 2rem;
+    position: relative;
+}
+
+.page-header-h1{
+    position: absolute;
+    top: 50%;
+    transform: translate(0%, -50%);
+    height: auto;
+}
+
+menu{
+    height: auto;
+    padding: 2px;
+    margin: 2px;
+}
+
+#root > menu > a{
+    padding: 2px;
+    margin: 2px;
+    font-weight: bold;
+}

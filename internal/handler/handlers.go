@@ -3,12 +3,13 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/VladimirBlinov/MarketPlace/internal/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 const (
@@ -41,19 +42,20 @@ func NewHandler(service *service.Service, sessionStore sessions.Store) *Handler 
 }
 
 func (h *Handler) InitHandler() {
-	h.Router.Use(handlers.CORS(
+	api := h.Router.PathPrefix("/api/v1").Subrouter()
+	api.Use(handlers.CORS(
 		handlers.ExposedHeaders([]string{"Set-Cookie"}),
 		handlers.AllowCredentials(),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "content-type", "Origin", "Accept", "X-Requested-With"}),
 		handlers.AllowedMethods([]string{"OPTIONS", "DELETE", "GET", "HEAD", "POST", "PUT"}),
 		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
 	))
-	h.Router.Use(h.setRequestID)
-	h.Router.Use(h.logRequest)
-	h.Router.HandleFunc("/register", h.handleRegister()).Methods("POST")
-	h.Router.HandleFunc("/signin", h.handleSignIn()).Methods("POST")
+	api.Use(h.setRequestID)
+	api.Use(h.logRequest)
+	api.HandleFunc("/register", h.handleRegister()).Methods("POST")
+	api.HandleFunc("/signin", h.handleSignIn()).Methods("POST")
 
-	private := h.Router.PathPrefix("/private").Subrouter()
+	private := api.PathPrefix("/private").Subrouter()
 	private.Use(h.AuthenticateUser)
 	private.HandleFunc("/whoami", h.handleWhoami()).Methods("GET")
 	private.HandleFunc("/signout", h.handleSignOut()).Methods("GET")

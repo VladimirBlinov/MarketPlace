@@ -49,7 +49,7 @@ func TestServerHandleSignOut(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/signout", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/signout", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -146,7 +146,7 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/private/product/product", b)
+			req, _ := http.NewRequest(http.MethodPost, "/api/v1/private/product/product", b)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -212,7 +212,7 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/private/product/product/%v", tc.productId), nil)
+			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/private/product/product/%v", tc.productId), nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -279,7 +279,7 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf(`/private/product/product/%v`, tc.productId), nil)
+			req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf(`/api/v1/private/product/product/%v`, tc.productId), nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -336,7 +336,7 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product/product", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/product/product", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -432,7 +432,7 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/private/product/product/%v", p.ProductID), b)
+			req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/private/product/product/%v", p.ProductID), b)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -477,7 +477,7 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product/category/get_categories", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/product/category/get_categories", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -525,7 +525,7 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/private/product/material/get_materials", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/product/material/get_materials", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
@@ -572,7 +572,7 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, "/", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/v1/", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
 			handlers.AuthenticateUser(handl).ServeHTTP(rec, req)
@@ -619,7 +619,7 @@ func TestServer_HandleRegister(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/register", b)
+			req, _ := http.NewRequest(http.MethodPost, "/api/v1/register", b)
 			handlers.Router.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
@@ -675,7 +675,7 @@ func TestServer_HandleSignIn(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/signin", b)
+			req, _ := http.NewRequest(http.MethodPost, "/api/v1/signin", b)
 			req.Header.Set("Origin", "http://localhost:3000")
 			handlers.Router.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)

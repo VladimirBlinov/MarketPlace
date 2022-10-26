@@ -4,8 +4,13 @@ services:
     build:
       context: ./MarketPlaceDB
       dockerfile: Dockerfile
-    env_file:
-      - ./MarketPlaceDB/.env
+    # env_file:
+    #   - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
     volumes:
       - ./MarketPlaceDB/db-data:/var/lib/postgresql/data
     ports:
@@ -19,21 +24,25 @@ services:
     
   migrate_test:
     image: migrate/migrate
+    # env_file:
+    #   - .env
     depends_on:
       postgresdb:
         condition: service_healthy
     volumes:
         - ./MarketPlaceDB/migrations:/migrations
-    command: ["-database",  "postgres://admin:qaz@postgresdb:5432/MarketPlaceTest?sslmode=disable", "-path", "/migrations", "up"]
+    command: ["-database",  "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/MarketPlaceTest?sslmode=disable", "-path", "/migrations", "up"]
     
   migrate_prod:
     image: migrate/migrate
+    # env_file:
+    #   - .env
     depends_on:
       postgresdb:
         condition: service_healthy
     volumes:
         - ./MarketPlaceDB/migrations:/migrations
-    command: ["-database",  "postgres://admin:qaz@postgresdb:5432/MarketPlace?sslmode=disable", "-path", "/migrations", "up"]
+    command: ["-database",  "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/MarketPlace?sslmode=disable", "-path", "/migrations", "up"]
 
   apiserver:
     build:

@@ -4,8 +4,6 @@ services:
     build:
       context: ./MarketPlaceDB
       dockerfile: Dockerfile
-    # env_file:
-    #   - .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -24,8 +22,6 @@ services:
     
   migrate_test:
     image: migrate/migrate
-    # env_file:
-    #   - .env
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -35,8 +31,6 @@ services:
     
   migrate_prod:
     image: migrate/migrate
-    # env_file:
-    #   - .env
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -73,37 +67,6 @@ services:
       - client
     ports:
       - "80:80"
-
-#   nginx-front:
-#     image: nginx:1.17.8
-#     volumes:
-#     - ./code-front:/code
-#     - ./docker/nginx-front.conf:/etc/nginx/conf.d/nginx-front.conf
-#     networks:
-#       net:
-#         ipv4_address: 192.168.240.2
-#   nginx-back:
-#     image: nginx:1.17.8
-#     volumes:
-#     - ./code-back:/code
-#     - ./docker/nginx-back.conf:/etc/nginx/conf.d/nginx-back.conf
-#     networks:
-#       net:
-#         ipv4_address: 192.168.240.3
-#   php-back:
-#     image: php:7.4-fpm
-#     volumes:
-#       - ./code-back:/code
-#     networks:
-#       net:
-#         ipv4_address: 192.168.240.4
-
-# networks:
-#   net:
-#     driver: bridge
-#     ipam:
-#       config:
-#         - subnet: 192.168.240.0/24
 
 volumes:
   db_data:

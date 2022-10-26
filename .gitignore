@@ -3,3 +3,4 @@ Marketplace/.vscode/
 Marketplace/.idea/
 MarketPlaceDB/.env
 MarketPlaceDB/db-data/
+.env

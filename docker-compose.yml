@@ -38,35 +38,35 @@ services:
         - ./MarketPlaceDB/migrations:/migrations
     command: ["-database",  "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/MarketPlace?sslmode=disable", "-path", "/migrations", "up"]
 
-  apiserver:
-    build:
-      context: ./MarketPlace
-      dockerfile: Dockerfile
-    volumes:
-      - ./:/usr/src/app
-    depends_on:
-      - migrate_prod
-    ports:
-      - "8080:8080"
+  # apiserver:
+  #   build:
+  #     context: ./MarketPlace
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./:/usr/src/app
+  #   depends_on:
+  #     - migrate_prod
+  #   ports:
+  #     - "8080:8080"
 
-  client:
-    build:
-      context: ./WebClient
-      dockerfile: Dockerfile
-    depends_on:
-      - apiserver
-    ports:
-      - "3000:3000"
+  # client:
+  #   build:
+  #     context: ./WebClient
+  #     dockerfile: Dockerfile
+  #   # depends_on:
+  #   #   - apiserver
+  #   ports:
+  #     - "3000:3000"
 
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    depends_on:
-      - apiserver
-      - client
-    ports:
-      - "80:80"
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile
+  #   # depends_on:
+  #   #   - apiserver
+  #   #   - client
+  #   ports:
+  #     - "80:80"
 
 volumes:
   db_data:

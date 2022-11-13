@@ -9,8 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/VladimirBlinov/AuthService/pkg/authservice"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/handler"
 	store2 "github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
+	"google.golang.org/grpc"
 
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
@@ -20,30 +22,57 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var sessManager authservice.AuthServiceClient
+
 func TestServerHandleSignOut(t *testing.T) {
 	store := teststore.New()
 	services := service.NewService(store)
 	u := model.TestUser(t)
 	store.User().Create(u)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(services, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(services, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		context      *model.User
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name:    "valid",
-			context: u,
+			name:               "valid",
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusOK,
+		},
+		{
+			name:               "not valid cookie",
+			context:            u,
+			serviceCookieValue: "",
+			coockieValue: map[interface{}]interface{}{
+				"user_id": u.ID,
+			},
+			expectedCode: http.StatusUnauthorized,
 		},
 	}
 	for _, tc := range testCases {
@@ -52,6 +81,7 @@ func TestServerHandleSignOut(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/signout", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
@@ -66,17 +96,32 @@ func TestServer_HandleProductCreate(t *testing.T) {
 	u := model.TestUser(t)
 	store.User().Create(u)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		payload      interface{}
-		context      *model.User
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		payload            interface{}
+		context            *model.User
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
 			name: "valid",
@@ -93,7 +138,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"wildberries_sku": 1234,
 				"ozon_sku":        1234567,
 			},
-			context: u,
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -108,7 +154,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"wildberries_sku": 0,
 				"ozon_sku":        0,
 			},
-			context: u,
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -122,7 +169,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"category_id":  105,
 				"material_id":  1,
 			},
-			context: u,
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -134,7 +182,8 @@ func TestServer_HandleProductCreate(t *testing.T) {
 				"product_name": "product",
 				"material_id":  1,
 			},
-			context: u,
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -149,11 +198,14 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, "/api/v1/private/product/product", b)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
+
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductGetProduct(t *testing.T) {
@@ -168,40 +220,58 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	mpiList.GetMPIList(p)
 	store.Product().Create(p, mpiList)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		context      *model.User
-		productId    interface{}
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		productId          interface{}
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name:      "valid",
-			context:   u,
-			productId: p.ProductID,
+			name:               "valid",
+			context:            u,
+			productId:          p.ProductID,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusOK,
 		},
 		{
-			name:      "invalid req",
-			context:   u,
-			productId: "",
+			name:               "invalid req",
+			context:            u,
+			productId:          "",
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:      "not found",
-			productId: p.ProductID + 1,
-			context:   u,
+			name:               "not found",
+			productId:          p.ProductID + 1,
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -215,12 +285,15 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/private/product/product/%v", tc.productId), nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
+
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleDeleteProduct(t *testing.T) {
@@ -235,40 +308,58 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 	mpiList.GetMPIList(p)
 	store.Product().Create(p, mpiList)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		context      *model.User
-		productId    interface{}
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		productId          interface{}
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name:      "valid",
-			context:   u,
-			productId: p.ProductID,
+			name:               "valid",
+			context:            u,
+			productId:          p.ProductID,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusOK,
 		},
 		{
-			name:      "invalid",
-			context:   u,
-			productId: "",
+			name:               "invalid",
+			context:            u,
+			productId:          "",
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:      "invalid_id",
-			context:   u,
-			productId: "a",
+			name:               "invalid_id",
+			context:            u,
+			productId:          "a",
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -282,6 +373,7 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf(`/api/v1/private/product/product/%v`, tc.productId), nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
@@ -293,6 +385,8 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 			}
 		})
 	}
+
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductFindByUserId(t *testing.T) {
@@ -313,20 +407,36 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	mpi2.GetMPIList(p2)
 	store.Product().Create(p2, mpi2)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		context      *model.User
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name:    "valid",
-			context: u,
+			name:               "valid",
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -339,21 +449,20 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/product/product", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
+
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductUpdate(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
-	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
-	handlers.InitHandler()
-	sc := securecookie.New(secretKey, nil)
 
 	u := model.TestUser(t)
 	store.User().Create(u)
@@ -374,12 +483,32 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 
 	p.Description = "new description"
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
+	secretKey := []byte("secret_key")
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
+	handlers.InitHandler()
+	sc := securecookie.New(secretKey, nil)
+
 	testCases := []struct {
-		name         string
-		context      *model.User
-		payload      interface{}
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		payload            interface{}
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
 			name:    "valid",
@@ -398,6 +527,7 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 				"wildberries_sku": 2222222222,
 				"ozon_sku":        1111111111,
 			},
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -420,6 +550,7 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 				"wildberries_sku": 2222222222,
 				"ozon_sku":        1111111111,
 			},
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -435,12 +566,13 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/private/product/product/%v", p.ProductID), b)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
-
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductGetCategories(t *testing.T) {
@@ -454,20 +586,36 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	store.Product().CreateCategory(c1)
 	store.Product().CreateCategory(c2)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		context      *model.User
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name:    "valid",
-			context: u,
+			name:               "valid",
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -480,12 +628,14 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/product/category/get_categories", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductGetMaterials(t *testing.T) {
@@ -502,20 +652,36 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	m1.MaterialName = "Пластик"
 	store.Product().CreateMaterial(m1)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 
 	testCases := []struct {
-		name         string
-		context      *model.User
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		context            *model.User
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name:    "valid",
-			context: u,
+			name:               "valid",
+			context:            u,
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
@@ -528,12 +694,14 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/api/v1/private/product/material/get_materials", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			ctx := context.WithValue(req.Context(), handler.CtxKeyUser, tc.context)
 			handlers.Router.ServeHTTP(rec, req.WithContext(ctx))
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_AuthenticateUser(t *testing.T) {
@@ -542,8 +710,22 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	u := model.TestUser(t)
 	store.User().Create(u)
 
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+		UserID: int32(u.ID),
+	})
+	if err != nil {
+		t.Fatalf("SessionManager error: %s", err.Error())
+	}
+
 	secretKey := []byte("secret_key")
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
 	handlers.InitHandler()
 	sc := securecookie.New(secretKey, nil)
 	handl := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -551,21 +733,24 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	})
 
 	testCases := []struct {
-		name         string
-		coockieValue map[interface{}]interface{}
-		expectedCode int
+		name               string
+		serviceCookieValue string
+		coockieValue       map[interface{}]interface{}
+		expectedCode       int
 	}{
 		{
-			name: "authenticated",
+			name:               "authenticated",
+			serviceCookieValue: sessionS.ID,
 			coockieValue: map[interface{}]interface{}{
 				"user_id": u.ID,
 			},
 			expectedCode: http.StatusOK,
 		},
 		{
-			name:         "not authenticated",
-			coockieValue: nil,
-			expectedCode: http.StatusUnauthorized,
+			name:               "not authenticated",
+			serviceCookieValue: "",
+			coockieValue:       nil,
+			expectedCode:       http.StatusUnauthorized,
 		},
 	}
 
@@ -575,22 +760,25 @@ func TestServer_AuthenticateUser(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/api/v1/", nil)
 			coockieStr, _ := sc.Encode(handler.SessionName, tc.coockieValue)
 			req.Header.Set("Cookie", fmt.Sprintf("%s=%s", handler.SessionName, coockieStr))
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", handler.SessionIDKey, tc.serviceCookieValue))
 			handlers.AuthenticateUser(handl).ServeHTTP(rec, req)
 
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
+	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleRegister(t *testing.T) {
 	store := teststore.New()
 	srvc := service.NewService(store)
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")))
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")), sessManager)
 	handlers.InitHandler()
 	testCases := []struct {
-		name         string
-		payload      interface{}
-		expectedCode int
+		name               string
+		serviceCookieValue string
+		payload            interface{}
+		expectedCode       int
 	}{
 		{
 			name: "valid",
@@ -632,7 +820,14 @@ func TestServer_HandleSignIn(t *testing.T) {
 	srvc := service.NewService(store)
 	store.User().Create(u)
 
-	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")))
+	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+	sessManager = authservice.NewAuthServiceClient(grcpConn)
+
+	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")), sessManager)
 	handlers.InitHandler()
 	testCases := []struct {
 		name         string
@@ -679,6 +874,15 @@ func TestServer_HandleSignIn(t *testing.T) {
 			req.Header.Set("Origin", "http://localhost:3000")
 			handlers.Router.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
+
+			cookieSessionID := rec.Result().Cookies()
+			for _, c := range cookieSessionID {
+				if c.Name == handler.SessionIDKey {
+					sessManager.Delete(context.Background(), &authservice.SessionID{
+						ID: c.Value,
+					})
+				}
+			}
 		})
 	}
 }

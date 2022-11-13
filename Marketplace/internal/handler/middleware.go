@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+
+	"github.com/VladimirBlinov/AuthService/pkg/authservice"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 func (h *Handler) setRequestID(next http.Handler) http.Handler {
@@ -18,11 +20,17 @@ func (h *Handler) setRequestID(next http.Handler) http.Handler {
 
 func (h *Handler) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _ := h.sessionStore.Get(r, SessionName)
+		id, ok := session.Values["user_id"]
+		if !ok {
+			id = 0
+		}
+
 		logger := h.logger.WithFields(logrus.Fields{
 			"remote_addr": r.RemoteAddr,
 			"request_id":  r.Context().Value(ctxKeyRequestID),
 			"method":      r.Method,
-			"user_id":     r.Context().Value(CtxKeyUser),
+			"user_id":     id,
 			"url":         r.URL.Path,
 		})
 		logger.Infof("started %s %s", r.Method, r.RequestURI)
@@ -53,6 +61,29 @@ func (h *Handler) AuthenticateUser(next http.Handler) http.Handler {
 
 		u, err := h.service.AuthService.Authenticate(id.(int))
 		if err != nil {
+			h.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		cookieSessionID, err := r.Cookie(SessionIDKey)
+		if err == http.ErrNoCookie {
+			h.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		} else if err != nil {
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		sessionS, err := h.sessionManager.Check(context.Background(), &authservice.SessionID{
+			ID: cookieSessionID.Value,
+		})
+
+		if err != nil {
+			h.error(w, r, http.StatusUnauthorized, err)
+			return
+		}
+
+		if sessionS == nil {
 			h.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
 			return
 		}

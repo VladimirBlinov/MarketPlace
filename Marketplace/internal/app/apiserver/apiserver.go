@@ -3,14 +3,17 @@ package apiserver
 import (
 	"context"
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
+	"github.com/VladimirBlinov/AuthService/pkg/authservice"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/handler"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store/sqlstore"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
 type ApiServer struct {
@@ -18,6 +21,17 @@ type ApiServer struct {
 }
 
 func (s *ApiServer) Start(config *Config) error {
+	grcpConn, err := grpc.Dial(
+		"127.0.0.1:8081",
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		log.Fatalf("cant connect to grpc")
+	}
+	defer grcpConn.Close()
+
+	sessManager := authservice.NewAuthServiceClient(grcpConn)
+
 	db, err := newDB(config.DataBaseURL)
 	if err != nil {
 		return err
@@ -32,7 +46,7 @@ func (s *ApiServer) Start(config *Config) error {
 	store := sqlstore.New(db)
 	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
 	services := service.NewService(store)
-	handlers := handler.NewHandler(services, sessionStore)
+	handlers := handler.NewHandler(services, sessionStore, sessManager)
 	handlers.InitHandler()
 
 	s.httpServer = &http.Server{

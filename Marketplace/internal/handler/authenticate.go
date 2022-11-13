@@ -3,8 +3,12 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/VladimirBlinov/AuthService/pkg/authservice"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
 )
@@ -22,6 +26,22 @@ func (h *Handler) handleSignIn() http.HandlerFunc {
 			h.error(w, r, http.StatusUnauthorized, errIncorrectEmailOrPassword)
 			return
 		}
+
+		sessionS, err := h.sessionManager.Create(context.Background(), &authservice.Session{
+			UserID: int32(u.ID),
+		})
+		if err != nil {
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookie := http.Cookie{
+			Name:    SessionIDKey,
+			Value:   sessionS.ID,
+			Expires: expiration,
+		}
+		http.SetCookie(w, &cookie)
 
 		session, err := h.sessionStore.Get(r, SessionName)
 		if err != nil {
@@ -67,6 +87,31 @@ func (h *Handler) handleSignOut() http.HandlerFunc {
 
 		delete(session.Values, "user_id")
 		_ = session.Save(r, w)
+
+		cookieSessionID, err := r.Cookie(SessionIDKey)
+		if err == http.ErrNoCookie {
+			h.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		} else if err != nil {
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		deleted, err := h.sessionManager.Delete(context.Background(), &authservice.SessionID{
+			ID: cookieSessionID.Value,
+		})
+		if err != nil {
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		if !deleted.Dummy {
+			h.error(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Session %s not deleted", cookieSessionID.Value)))
+			return
+		}
+
+		cookieSessionID.Expires = time.Now().AddDate(0, 0, -1)
+		http.SetCookie(w, cookieSessionID)
 
 		h.respond(w, r.WithContext(context.Background()), http.StatusOK, nil)
 	}

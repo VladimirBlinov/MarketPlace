@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/VladimirBlinov/AuthService/pkg/authservice"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -14,6 +15,7 @@ import (
 
 const (
 	SessionName            = "MarketPlace"
+	SessionIDKey           = "session_id"
 	CtxKeyUser      ctxKey = iota
 	ctxKeyRequestID ctxKey = iota
 )
@@ -26,18 +28,20 @@ var (
 type ctxKey int8
 
 type Handler struct {
-	service      *service.Service
-	sessionStore sessions.Store
-	Router       *mux.Router
-	logger       *logrus.Logger
+	service        *service.Service
+	sessionStore   sessions.Store
+	Router         *mux.Router
+	logger         *logrus.Logger
+	sessionManager authservice.AuthServiceClient
 }
 
-func NewHandler(service *service.Service, sessionStore sessions.Store) *Handler {
+func NewHandler(service *service.Service, sessionStore sessions.Store, sessionManager authservice.AuthServiceClient) *Handler {
 	return &Handler{
-		service:      service,
-		sessionStore: sessionStore,
-		Router:       mux.NewRouter(),
-		logger:       logrus.New(),
+		service:        service,
+		sessionStore:   sessionStore,
+		Router:         mux.NewRouter(),
+		logger:         logrus.New(),
+		sessionManager: sessionManager,
 	}
 }
 

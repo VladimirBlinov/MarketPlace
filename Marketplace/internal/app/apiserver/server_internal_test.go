@@ -12,9 +12,9 @@ import (
 	"github.com/VladimirBlinov/AuthService/pkg/authservice"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/handler"
 	store2 "github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store"
-	"google.golang.org/grpc"
 
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/model"
+	authservicefake "github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/pkg/authservice/fake"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/service"
 	"github.com/VladimirBlinov/MarketPlace/MarketPlace/internal/store/teststore"
 	"github.com/gorilla/securecookie"
@@ -23,6 +23,7 @@ import (
 )
 
 var sessManager authservice.AuthServiceClient
+var testSessionID string = "sessionid"
 
 func TestServerHandleSignOut(t *testing.T) {
 	store := teststore.New()
@@ -30,19 +31,10 @@ func TestServerHandleSignOut(t *testing.T) {
 	u := model.TestUser(t)
 	store.User().Create(u)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(services, sessions.NewCookieStore(secretKey), sessManager)
@@ -96,19 +88,10 @@ func TestServer_HandleProductCreate(t *testing.T) {
 	u := model.TestUser(t)
 	store.User().Create(u)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -204,8 +187,6 @@ func TestServer_HandleProductCreate(t *testing.T) {
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
-
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductGetProduct(t *testing.T) {
@@ -220,19 +201,10 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 	mpiList.GetMPIList(p)
 	store.Product().Create(p, mpiList)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -292,8 +264,6 @@ func TestServer_HandleProductGetProduct(t *testing.T) {
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
-
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleDeleteProduct(t *testing.T) {
@@ -308,19 +278,10 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 	mpiList.GetMPIList(p)
 	store.Product().Create(p, mpiList)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -385,8 +346,6 @@ func TestServer_HandleDeleteProduct(t *testing.T) {
 			}
 		})
 	}
-
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductFindByUserId(t *testing.T) {
@@ -407,19 +366,10 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 	mpi2.GetMPIList(p2)
 	store.Product().Create(p2, mpi2)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -456,8 +406,6 @@ func TestServer_HandleProductFindByUserId(t *testing.T) {
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
-
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductUpdate(t *testing.T) {
@@ -483,19 +431,10 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 
 	p.Description = "new description"
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -572,7 +511,6 @@ func TestServer_HandleProductUpdate(t *testing.T) {
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductGetCategories(t *testing.T) {
@@ -586,19 +524,10 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 	store.Product().CreateCategory(c1)
 	store.Product().CreateCategory(c2)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -635,7 +564,6 @@ func TestServer_HandleProductGetCategories(t *testing.T) {
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleProductGetMaterials(t *testing.T) {
@@ -652,19 +580,10 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 	m1.MaterialName = "Пластик"
 	store.Product().CreateMaterial(m1)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -701,7 +620,6 @@ func TestServer_HandleProductGetMaterials(t *testing.T) {
 			assert.NotEqual(t, 0, rec.Result().ContentLength)
 		})
 	}
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_AuthenticateUser(t *testing.T) {
@@ -710,19 +628,10 @@ func TestServer_AuthenticateUser(t *testing.T) {
 	u := model.TestUser(t)
 	store.User().Create(u)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
-
-	sessionS, err := sessManager.Create(context.Background(), &authservice.Session{
+	sessManager := authservicefake.NewAuthServiceClientFake()
+	sessionS, _ := sessManager.Create(context.Background(), &authservice.Session{
 		UserID: int32(u.ID),
 	})
-	if err != nil {
-		t.Fatalf("SessionManager error: %s", err.Error())
-	}
 
 	secretKey := []byte("secret_key")
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore(secretKey), sessManager)
@@ -766,7 +675,6 @@ func TestServer_AuthenticateUser(t *testing.T) {
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
-	sessManager.Delete(context.Background(), sessionS)
 }
 
 func TestServer_HandleRegister(t *testing.T) {
@@ -820,12 +728,7 @@ func TestServer_HandleSignIn(t *testing.T) {
 	srvc := service.NewService(store)
 	store.User().Create(u)
 
-	grcpConn, err := grpc.Dial("127.0.0.1:8081", grpc.WithInsecure())
-	if err != nil {
-		t.Fatalf("cant connect to grpc")
-	}
-	defer grcpConn.Close()
-	sessManager = authservice.NewAuthServiceClient(grcpConn)
+	sessManager := authservicefake.NewAuthServiceClientFake()
 
 	handlers := handler.NewHandler(srvc, sessions.NewCookieStore([]byte("secret_key")), sessManager)
 	handlers.InitHandler()

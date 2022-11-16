@@ -43,17 +43,17 @@ func (h *Handler) handleSignIn() http.HandlerFunc {
 		}
 		http.SetCookie(w, &cookie)
 
-		session, err := h.sessionStore.Get(r, SessionName)
-		if err != nil {
-			h.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
+		// session, err := h.sessionStore.Get(r, SessionName)
+		// if err != nil {
+		// 	h.error(w, r, http.StatusInternalServerError, err)
+		// 	return
+		// }
 
-		session.Values["user_id"] = u.ID
-		if err := h.sessionStore.Save(r, w, session); err != nil {
-			h.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
+		// session.Values["user_id"] = u.ID
+		// if err := h.sessionStore.Save(r, w, session); err != nil {
+		// 	h.error(w, r, http.StatusInternalServerError, err)
+		// 	return
+		// }
 
 		h.respond(w, r, http.StatusOK, nil)
 	}
@@ -79,15 +79,6 @@ func (h *Handler) handleRegister() http.HandlerFunc {
 
 func (h *Handler) handleSignOut() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := h.sessionStore.Get(r, SessionName)
-		if err != nil {
-			h.error(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
-		delete(session.Values, "user_id")
-		_ = session.Save(r, w)
-
 		cookieSessionID, err := r.Cookie(SessionIDKey)
 		if err == http.ErrNoCookie {
 			h.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
